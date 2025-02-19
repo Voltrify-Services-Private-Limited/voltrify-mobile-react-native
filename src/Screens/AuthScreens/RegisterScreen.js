@@ -173,7 +173,7 @@ const RegisterScreen = props => {
           <View style={styles.input_box}>
             <TextInput
               placeholder="First Name"
-              placeholderTextColor="#000"
+              placeholderTextColor="#00000066"
               keyboardType="default"
               style={styles.text_7}
               onChangeText={x => setFirstName(x)}
@@ -183,7 +183,7 @@ const RegisterScreen = props => {
           <View style={styles.input_box}>
             <TextInput
               placeholder="Last Name"
-              placeholderTextColor="#000"
+              placeholderTextColor="#00000066"
               keyboardType="default"
               style={styles.text_7}
               onChangeText={x => setLastName(x)}
@@ -193,7 +193,7 @@ const RegisterScreen = props => {
           <View style={styles.input_box}>
             <TextInput
               placeholder="Email"
-              placeholderTextColor="#000"
+              placeholderTextColor="#00000066"
               keyboardType="email-address"
               style={styles.text_7}
               onChangeText={x => setEmail(x)}
@@ -203,7 +203,7 @@ const RegisterScreen = props => {
           <View style={styles.input_box}>
             <TextInput
               placeholder="Phone Number"
-              placeholderTextColor="#000"
+              placeholderTextColor="#00000066"
               keyboardType="numeric"
               maxLength={10}
               style={styles.text_7}
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     textAlign: 'left',
-    color: '#00000066',
+    color: '#000',
     width: '100%',
   },
   modalView: {

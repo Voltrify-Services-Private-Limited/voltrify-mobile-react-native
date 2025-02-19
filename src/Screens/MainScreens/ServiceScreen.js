@@ -106,7 +106,9 @@ const ServiceScreen = ({ route }) => {
           end={{ x: 0, y: 1 }}
           style={styles.linerStyle}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('ServiceDetails')}>
+             onPress={() => navigation.navigate('ServiceDetails', {
+              service_id: item.id,
+            })}>
             <Text style={styles.textCard}>{item.name}</Text>
           </TouchableOpacity>
         </LinearGradient>

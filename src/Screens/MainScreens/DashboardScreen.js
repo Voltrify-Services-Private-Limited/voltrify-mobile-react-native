@@ -94,7 +94,7 @@ const DashboardScreen = ({ route }) => {
           service_id: item.id,
         })}>
         <Image
-          source={{uri:item.deviceImage}}
+          source={require('../../Icons/image1.png')}
           style={{ width: '100%', borderRadius: 10,height:'100' }}
         />
         <Text style={styles.cardNameText}>

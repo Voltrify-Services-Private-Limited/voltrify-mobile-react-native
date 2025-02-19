@@ -55,7 +55,7 @@ const PaymentScreen = ({route}) => {
       <View>
         <View style={{ marginVertical: 5 }}>
           <Text style={styles.text_1}>Debit or Credit Card</Text>
-         <TouchableOpacity onPress={() => paymentHandle()}>
+         <TouchableOpacity onPress={() => setModalVisible(true)}>
          <View style={styles.paymentList}>
             <View style={{ flexDirection: 'row' }}>
               <Image source={require('../../Icons/debit.png')} />

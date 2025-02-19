@@ -1,12 +1,12 @@
 import React, {useReducer, useMemo, useEffect} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {AuthContext} from './assets/Component/AuthContext';
+import {AuthContext} from './src/Component/AuthContext';
 
 
-import SplashScreen from './assets/Screens/AuthScreens/SplashScreen';
-import Authroute from './assets/Routes/AuthRoute';
-import Mainroute from './assets/Routes/MainRoute';
+import SplashScreen from './src/Screens/AuthScreens/SplashScreen';
+import Authroute from './src/Routes/AuthRoute';
+import Mainroute from './src/Routes/MainRoute';
 
 const App = () => {
   let initialState = {

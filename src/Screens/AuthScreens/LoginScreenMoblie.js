@@ -94,7 +94,7 @@ const LoginScreenMobile = (props) => {
           />
           <TextInput
             placeholder="Enter Your Mobile Number"
-            placeholderTextColor="black"
+            placeholderTextColor="#00000066"
             keyboardType="numeric"
             maxLength={10}
             style={styles.text_7}
@@ -158,8 +158,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     textAlign: 'left',
-    color: '#00000066',
-
+    color: '#000',
+    marginLeft:4,
     width: '100%',
   },
   second_view: {

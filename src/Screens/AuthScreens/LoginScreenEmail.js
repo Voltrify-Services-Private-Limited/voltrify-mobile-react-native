@@ -40,7 +40,8 @@ const LoginScreenEmail = (props) => {
         <View style={styles.input_box}>
           <TextInput
             placeholder="Enter Your Email"
-            placeholderTextColor="black"
+            placeholderTextColor="#00000066"
+            style={styles.text_7}
           />
         </View>
         <TouchableOpacity
@@ -86,6 +87,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     borderTopLeftRadius: 30,
     backgroundColor: '#ffffff',
+  },
+  text_7: {
+    fontSize: 16,
+    fontWeight: 500,
+    textAlign: 'left',
+    color: '#000',
+    marginLeft:4,
+    width: '100%',
   },
   text_3: {
     fontSize: 24,

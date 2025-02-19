@@ -269,9 +269,9 @@ const OtpScreen = ({ route, navigation }) => {
           <Text style={styles.text_5}>Submit</Text>
         </TouchableOpacity>
 
-        {/* <TouchableOpacity >
+        <TouchableOpacity onPress={() => VerifyOtpApi()} >
           <Text style={styles.text_6}>Resend OTP</Text>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
