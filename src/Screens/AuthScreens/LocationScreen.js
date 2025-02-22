@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,87 +7,131 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import MapView from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { AuthContext } from '../../Component/AuthContext';
-import { showToast } from '../../Component/Toast';
-const LocationScreen = ({route}) => {
+import Geocoding from 'react-native-geocoding';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+const LocationScreen = ({ route }) => {
+  const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [addressLine2, setAddressLine2] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
   const [landmark, setLandmark] = useState('');
-  const [location, setLocation] = useState('');
-  const [enablelocation, setenbaleLocation] = useState('');
-    const {login} = React.useContext(AuthContext);
-    const {tokens} = route.params;
-  const numberData = async () => {
-    await AsyncStorage.setItem('location', addressLine1, location, landmark); 
-  };
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [state, setState] = useState('');
+  const [pincode, setPincode] = useState('');
+  const [city, setCity] = useState('');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState({
+    latitude: null,
+    longitude: null,
+    error: null,
+  });
+  const [error, setError] = useState('');
+  const [UserAddress, setUserAddress] = useState('');
+  const { login } = React.useContext(AuthContext);
+  const { tokens } = route.params;
+  const { id } = route.params;
+
+  console.log(location, UserAddress);
+  console.log('adresss---------------', UserAddress);
+
+  useEffect(() => {
+    console.log(id);
+    setUserId();
+  }, []);
+
+
+  const setUserId = async () => {
+    await AsyncStorage.setItem("userId", id);
+  }
+
   const UserLoginApi = async () => {
+    const userData = await AsyncStorage.getItem('access_token');
+    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
     const url = 'http://api.voltrify.in/user/address';
     result = await fetch(url, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', // Optional, depending on your API requirements
+      },
       body: JSON.stringify({
-        addressLine1: location,
+        user_id: id,
+        firstName: firstName,
+        lastName: lastName,
+        city: city,
         addressLine2: addressLine2,
+        addressLine1: addressLine1,
         landmark: landmark,
+        phoneNumber: phone,
+        state: state,
+        pincode: pincode,
       }),
     });
+
+    await AsyncStorage.setItem("address1", addressLine1);
+    await AsyncStorage.setItem("address2", addressLine2);
+    await AsyncStorage.setItem("landmark", landmark);
+    await AsyncStorage.setItem("city", city);
+    await AsyncStorage.setItem("state", state);
+    await AsyncStorage.setItem("pincode", pincode);
 
     response = await result.json();
     console.log('login data', response);
     Alert.alert(JSON.stringify(response));
-    setVisible(true);
+    setModalVisible(!modalVisible);
   };
 
-  const loginData = () => {
-    _numberLogin();
-    numberData();
-  };
+  const locationAddress = () => {
+    Geocoding.init('AIzaSyD33wZr809ySlFdDUF_UnxRB0TO91R3uqY');
+    // Call reverse geocoding
+    Geocoding.from(location.latitude, location.longitude)
+      .then((json) => {
+        if (json.results && json.results.length > 0) {
+          const formattedAddress = json.results[0].formatted_address;
+          setUserAddress(formattedAddress);
+        } else {
+          setError('No address found for these coordinates.');
+        }
+      })
+      .catch((err) => {
+        setError('Error: ' + err.message);
+      });
+  }
 
-  const _numberLogin = () => {
-    if (addressLine2 == '') {
-      showToast({text: 'Please enter your Phone Number.', navBar: false});
-    } else if (location == '') {
-      showToast({
-        text: 'Correct Your Phone Number.',
-        navBar: false,
-      });
-    } else if (landmark == '') {
-      showToast({
-        text: 'Correct Your Phone Number.',
-        navBar: false,
-      });
-    } else {
-      UserLoginApi();
-      props.navigation.navigate('BottomTab', {
-        addressLine1: location,
-        addressLine2: addressLine2,
-        landmark: landmark,
-      });
-    }
-  };
-
-  const getLocation = () => {
+  const getCurrentPosition = async () => {
     Geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        setenbaleLocation({ latitude, longitude });
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          error: null,
+        });
+
       },
       (error) => {
-        console.error(error);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+        setLocation({
+          ...location,
+          error: error.message,
+        });
+      }
     );
-    console.log("======= Location Data =======",enablelocation);
+    locationAddress();
     login(tokens);
+    await AsyncStorage.setItem("latlongdata", JSON.stringify(UserAddress));
   };
 
 
   return (
     <View style={styles.main_view}>
-      <View style={{top: 92, alignItems: 'center', justifyContent: 'center'}}>
+      <View style={{ top: 92, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={styles.text_1}>Welcome to</Text>
         <Image source={require('../../Icons/text_logo1.png')} />
         <Text style={styles.text_1}>Your One Stop Solution</Text>
@@ -120,9 +164,9 @@ const LocationScreen = ({route}) => {
                     alignSelf: 'center',
                   }}></View>
               </TouchableOpacity>
-              <View style={{width: '100%', height: 190}}>
+              <View style={{ width: '100%', height: 190 }}>
                 <MapView
-                  style={{width: '100%', height: '100%'}}
+                  style={{ width: '100%', height: '100%' }}
                   initialRegion={{
                     latitude: 37.78825,
                     longitude: -122.4324,
@@ -131,43 +175,105 @@ const LocationScreen = ({route}) => {
                   }}
                 />
               </View>
-              <View style={{paddingHorizontal: 30}}>
+              <View style={{ paddingHorizontal: 30 }}>
                 <Text style={styles.text_3Modal}>Sagar, Madhya Pradesh</Text>
                 <Text style={styles.text_4Modal}>
                   Krishna Nagar, Makronia, Sagar (M.P.) {'\n'}
                   Ph: +91 1234567890
                 </Text>
-                <View style={styles.input_boxModal}>
-                  <TextInput
-                    placeholder="House/Flat Number*"
-                    placeholderTextColor="#A09CAB"
-                    keyboardType="default"
-                    style={styles.text_7Modal}
-                    onChangeText={x => setAddressLine2(x)}
-                    value={addressLine2}
-                  />
-                </View>
-                <View style={styles.input_boxModal}>
-                  <TextInput
-                    placeholder="Address"
-                    placeholderTextColor="#A09CAB"
-                    keyboardType="default"
-                    style={styles.text_7Modal}
-                    onChangeText={x => setLocation(x)}
-                    value={location}
-                  />
-                </View>
-                <View style={styles.input_boxModal}>
-                  <TextInput
-                    placeholder="Landmark (Optional)"
-                    placeholderTextColor="#A09CAB"
-                    keyboardType="default"
-                    style={styles.text_7Modal}
-                    onChangeText={x => setLandmark(x)}
-                    value={landmark}
-                  />
-                </View>
-                <View style={{flexDirection: 'row', marginTop: 50}}>
+                <ScrollView style={{ height: 300, padding: 0 }}>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="First Name"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setFirstName(x)}
+                      value={firstName}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Last Name"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setLastName(x)}
+                      value={lastName}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Address 1"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setAddressLine1(x)}
+                      value={addressLine1}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Phone"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setPhone(x)}
+                      value={phone}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Address 2"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setAddressLine2(x)}
+                      value={addressLine2}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Landmark"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setLandmark(x)}
+                      value={landmark}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="City"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setCity(x)}
+                      value={city}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="State"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setState(x)}
+                      value={state}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Pincode"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setPincode(x)}
+                      value={pincode}
+                    />
+                  </View>
+                </ScrollView>
+                <View style={{ flexDirection: 'row', marginTop: 50 }}>
                   <TouchableOpacity style={styles.btn1Modal}>
                     <Text style={styles.btnText1Modal}>Home</Text>
                   </TouchableOpacity>
@@ -177,7 +283,7 @@ const LocationScreen = ({route}) => {
                 </View>
                 <TouchableOpacity
                   style={styles.input_box2Modal}
-                  onPress={() => loginData()}>
+                  onPress={() => UserLoginApi()}>
                   <Text style={styles.text_6Modal}>Save changes</Text>
                 </TouchableOpacity>
               </View>
@@ -207,7 +313,7 @@ const LocationScreen = ({route}) => {
         <Image source={require('../../Icons/Group.png')} />
         <TouchableOpacity
           style={[styles.button]}
-          onPress={() => getLocation()}>
+          onPress={() => getCurrentPosition()}>
           <Text style={styles.text_5}>Enable Location</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -346,7 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     textAlign: 'left',
-    color: '#00000066',
+    color: '#000',
     width: '100%',
   },
   second_viewModal: {

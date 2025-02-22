@@ -28,10 +28,14 @@ const OtpScreen = ({ route, navigation }) => {
   const [f4, setF4] = useState('');
   const [f5, setF5] = useState('');
   const [f6, setF6] = useState('');
+  const [user, setUser] = useState('');
   const { phoneNumber } = route.params;
 
   const otpNumber = f1 + f2 + f3 + f4 + f5 + f6;
 
+    useEffect(() => {
+      getProfile_id();
+    }, []);
 
   const VerifyOtpApi = async () => {
     try {
@@ -72,6 +76,7 @@ const OtpScreen = ({ route, navigation }) => {
         await AsyncStorage.setItem('refresh_token', JSON.stringify(result.data.refreshToken.token));
         navigation.navigate('LocationScreen', {
           tokens: result.data.accessToken.token,
+          id: user.data.id,
         });
       } else {
         ToastAndroid.show('Something Wrong!', ToastAndroid.BOTTOM);
@@ -85,28 +90,33 @@ const OtpScreen = ({ route, navigation }) => {
     }
   };
 
+  ///////////// Profile Id ///////////////
 
-  // // Login function
-  // const login = async (username, password) => {
-  //   try {
-  //     const response = await fetch('https://your-backend.com/api/login', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ username, password }),
-  //     });
-
-  //     const data = await response.json();
-
-  //     // Store tokens securely
-  //     await AsyncStorage.setItem('access_token', data.access_token);
-  //     await AsyncStorage.setItem('refresh_token', data.refresh_token);
-  //   } catch (error) {
-  //     console.error('Login error:', error);
-  //   }
-  // };
-
+  const getProfile_id = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('access_token');
+      const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+ 
+      const response = await fetch('http://api.voltrify.in/user', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json', // Optional, depending on your API requirements
+        },
+      });
+ 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+ 
+      const resData = await response.json();
+      setUser(resData);
+      console.log('profile id', resData);
+      
+    } catch (err) {
+      console.log('get profile err --- ', err);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -268,10 +278,7 @@ const OtpScreen = ({ route, navigation }) => {
         <TouchableOpacity style={[styles.button]} onPress={() => VerifyOtpApi()}>
           <Text style={styles.text_5}>Submit</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => VerifyOtpApi()} >
           <Text style={styles.text_6}>Resend OTP</Text>
-        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );

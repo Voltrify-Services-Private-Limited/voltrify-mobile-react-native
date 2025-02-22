@@ -6,12 +6,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const YourCart = ({ route }) => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
-  const [orderId, setOrderId] = useState("");
+  const [orderId, setOrderId] = useState([]);
 
   useEffect(() => {
     getAllOrder();
     console.log('Order', data);
     console.log("cart Id",orderId);
+
   }, []);
 
   const getAllOrder = async () => {
@@ -32,29 +33,25 @@ const YourCart = ({ route }) => {
       }
       const resData = await response.json();
       setData(resData.data);
-      await AsyncStorage.setItem('cartId', JSON.stringify(resData.data.id));
     } catch (err) {
       console.log('get Order err --- ', err);
     }
   };
 
 
-  const deleteCart = async () => {
+  const deleteCart = async (id) => {
     const userData = await AsyncStorage.getItem('access_token');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
     
     try {
-      const response = await fetch(`http://api.voltrify.in/user/address/${use_id}`, {
+      const response = await fetch(`http://api.voltrify.in//user/cart/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json', // Optional, depending on your API requirements
         },
-        body: JSON.stringify({
-          use_id: use_id,
-        }),
       });
-
+      setData(data.filter(item => item.id !== id));
       if (response.ok) {
         console.log('Success', 'Item deleted successfully');
       } else {
@@ -64,7 +61,6 @@ const YourCart = ({ route }) => {
       console.error('Error:', error);
       console.log('Error', 'An error occurred while deleting the item');
     }
-    console.log("=========Token====", token);
 
   };
 
@@ -79,9 +75,11 @@ const YourCart = ({ route }) => {
           <Text>1 Service </Text>
         </View>
       </View>
+      <TouchableOpacity onPress={() => deleteCart(item.id)} style={{justifyContent:'center'}}>
       <View style={{ justifyContent: 'center' }}>
         <Image source={require('../../Icons/recylebin.png')} />
       </View>
+      </TouchableOpacity>
     </View>
   );
 

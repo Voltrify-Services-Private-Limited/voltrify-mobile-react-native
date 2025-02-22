@@ -9,6 +9,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
   FlatList,
+  Alert,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -32,6 +33,7 @@ const ManageAddress = ({ route }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user_id, setUser_id] = useState([]);
+  const [addresId, setAddressId] = useState("");
 
   const ProfileEdit = async () => {
     try {
@@ -72,21 +74,18 @@ const ManageAddress = ({ route }) => {
     console.log("=========Token====", token);
   };
 
-  const deleteAddress = async (use_id) => {
+  const deleteAddress = async (id) => {
     const userData = await AsyncStorage.getItem('access_token');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
     try {
-      const response = await fetch(`http://api.voltrify.in/user/address/${use_id}`, {
+      const response = await fetch(`http://api.voltrify.in/user/address/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json', // Optional, depending on your API requirements
         },
-        body: JSON.stringify({
-          use_id: use_id,
-        }),
       });
-
+      setData(data.filter(item => item.id !== id));
       if (response.ok) {
         console.log('Success', 'Item deleted successfully');
       } else {
@@ -96,17 +95,14 @@ const ManageAddress = ({ route }) => {
       console.error('Error:', error);
       console.log('Error', 'An error occurred while deleting the item');
     }
-    console.log("=========Token====", token);
+
+   setPopModal(!popModal);
 
   };
 
-  const DeleteButton = () => {
-    deleteAddress();
-    setPopModal(!popModal);
-  }
-
   useEffect(() => {
     getAllAddress();
+
   }, []);
 
   const getAllAddress = async () => {
@@ -127,37 +123,13 @@ const ManageAddress = ({ route }) => {
       }
       const resData = await response.json();
       setData(resData.data);
+      setId(JSON.stringify(resData.data.id));
+      Alert.alert(id);
     } catch (err) {
       console.log('get profile err --- ', err);
     }
   };
   console.log('profile', data);
-
-  // const getAllAddress = async () => {
-  //   const userData = await AsyncStorage.getItem('userData');
-  //   const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-  //   try {
-  //     const response = await fetch(`http://api.voltrify.in/user/address`, {
-  //       method: 'GET',
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         'Content-Type': 'application/json', // Optional, depending on your API requirements
-  //       }
-  //     });
-
-  //     if (!response.ok) {
-  //         throw new Error('Network response was not ok');
-  //       }
-  //       const json = await response.json();
-  //       setData(json);
-  //     } catch (error) {
-  //       setError(error.message);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   console.log("=========Token====",token);
-
-  // };
 
   const renderItem = ({ item }) => (
     <View style={styles.box2}>
@@ -168,22 +140,9 @@ const ManageAddress = ({ route }) => {
         </TouchableOpacity>
       </View>
       <Text style={styles.boxText4}>
-        {item.firstName} {item.addressLine1} (M.P.) {'\n'} Ph: +91 {item.phoneNumber}
-        {item.user_id}
+        {item.addressLine1} {item.addressLine2} {item.landmark} {item.city} {item.state} {item.pincode} {'\n'} Ph: +91 {item.phoneNumber}
       </Text>
-    </View>
-  );
-
-  return (
-    <View style={styles.mainView}>
-      <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Image source={require('../../Icons/leftArrow.png')} />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Manage Address</Text>
-      </View>
+      
       {/* ================= Delete Modal Start ========= */}
       <Modal
         animationType="none"
@@ -202,7 +161,7 @@ const ManageAddress = ({ route }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.buttonPop, styles.buttonClosePop]}
-              onPress={() => DeleteButton()}>
+              onPress={() => deleteAddress(item.id)}>
               <Text style={styles.textStylePop}>Delete</Text>
             </TouchableOpacity>
           </View>
@@ -303,6 +262,19 @@ const ManageAddress = ({ route }) => {
         </View>
       </Modal>
       {/* ================= Edit Modal End========= */}
+    </View>
+  );
+
+  return (
+    <View style={styles.mainView}>
+      <View style={styles.topHeader}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Image source={require('../../Icons/leftArrow.png')} />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>Manage Address</Text>
+      </View>
       <View style={styles.section}>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <View style={styles.box1}>
