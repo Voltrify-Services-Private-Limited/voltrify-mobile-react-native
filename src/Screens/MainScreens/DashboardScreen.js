@@ -7,25 +7,35 @@ const DashboardScreen = ({ route }) => {
   const [getData, setGetData] = useState('');
   const [serviceData, setServiceData] = useState([]);
   const [categoriesData, setCategorise] = useState([])
-  const [getImage, setGetImage] = useState([]);
+  const [getImage, setGetImage] = useState('');
+  const [location, setLocationData] = useState('');
+  const [flat_no, setFlatNo] = useState('');
   const navigation = useNavigation();
   const dataView = async () => {
-    const data = await AsyncStorage.getItem('location', addressLine1, location, landmark);
     setGetData(data);
     console.log(data);
+   const latitudeData = await AsyncStorage.getItem('access_token');
+  
+   
+  //  setLocationData(latitudeData);
   };
+
+  console.log('latidjhghjgjhd----', location);
+
   useEffect(() => {
     dataView();
     getAllService();
     getAllCategorise();
     refreshTokenApi();
-    console.log("============= Image ===========",getImage);
+    getAddress();
   }, []);
 
 
   const getAllCategorise = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
+      const locationDatta = await AsyncStorage.getItem('latlongdata');
+      setLocationData(locationDatta)
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
       const response = await fetch('http://api.voltrify.in/categories', {
         method: 'GET',
@@ -63,7 +73,6 @@ const DashboardScreen = ({ route }) => {
       }
       const resData = await response.json();
       setServiceData(resData.data);
-      setGetImage(resData.data.image)
     } catch (err) {
       console.log('Service Data err --- ', err);
     }
@@ -149,13 +158,23 @@ const DashboardScreen = ({ route }) => {
     // Alert.alert(JSON.stringify(response.data.accessToken));
   };
 
+  const getAddress = async() =>{
+   const getAdd_1 = await AsyncStorage.getItem("address1");
+   const getAdd_2 = await AsyncStorage.getItem("address2");
+   const getLandmark = await AsyncStorage.getItem("landmark");
+   const getCity = await AsyncStorage.getItem("city");
+   const getState = await AsyncStorage.getItem("state");
+    const getPincode = await AsyncStorage.getItem("pincode");
+    setFlatNo(getAdd_1 + getAdd_2 + getLandmark + getCity + getState + getPincode);
+  }
+
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
         <View style={styles.headerLeft}>
           <Image source={require('../../Icons/locationIcon.png')} />
           <Text style={styles.headerText_1}>
-            B-22, Veena Nagar, MR-10, {getData}
+            {flat_no}
           </Text>
           <Image source={require('../../Icons/downArrow.png')} />
         </View>
@@ -244,6 +263,7 @@ const styles = StyleSheet.create({
     color: '#000000B2',
     marginHorizontal: 5,
     marginTop: 1,
+    letterSpacing:1,
   },
   headerRight: {
     flexDirection: 'row',

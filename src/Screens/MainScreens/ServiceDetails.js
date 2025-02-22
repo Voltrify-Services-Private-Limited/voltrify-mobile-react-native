@@ -53,10 +53,10 @@ const ServiceDetails = ({ route }) => {
   };
 
   const createCart = async () => {
-    const userData = await AsyncStorage.getItem('userData');
+    const userData = await AsyncStorage.getItem('access_token');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-
-    const url = 'http://api.voltrify.in/user/orders';
+    const user_id = await AsyncStorage.getItem('userId');
+    const url = 'http://api.voltrify.in/user/cart';
     result = await fetch(url, {
       method: 'POST',
       headers: {
@@ -64,22 +64,15 @@ const ServiceDetails = ({ route }) => {
         'Content-Type': 'application/json', // Optional, depending on your API requirements
       },
       body: JSON.stringify({
-        cart_id: cart_id,
-        address_id: address_id,
-        condition_id: condition_id,
-        time_slot: time_slot,
-        coupons_code: coupons_code,
-        payment_mode: payment_mode,
-        service_description: service_description,
+        service_id: service_id,
+        user_id: user_id,
       }),
     });
 
     response = await result.json();
     console.log('login data', response);
     Alert.alert(JSON.stringify(response));
-    setVisible(true);
-  };
-
+  }
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
@@ -387,7 +380,7 @@ const ServiceDetails = ({ route }) => {
               </View>
               <View style={{ marginHorizontal: 5 }}>
                 <Image source={require('../../Icons/serviceImage2.png')} />
-                <TouchableOpacity style={styles.addBtn}>
+                <TouchableOpacity style={styles.addBtn} onPress={() => createCart()}>
                   <Text style={styles.addBtnText}>Add</Text>
                 </TouchableOpacity>
               </View>
