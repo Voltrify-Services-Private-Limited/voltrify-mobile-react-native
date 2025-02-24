@@ -6,19 +6,21 @@ import {
   TextInput,
   TouchableOpacity,
   Modal,
+  Alert,
 } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import RazorpayCheckout from 'react-native-razorpay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PaymentScreen = ({route}) => {
+const PaymentScreen = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [number, setNumber] = useState('');
 
   ////////////// Payment Methods ///////////////
 
-  const paymentHandle = async () =>{
+  const paymentHandle = async () => {
     const options = {
       description: 'Credits towards consultation',
       image: 'https://i.imgur.com/3g7nmJC.png',
@@ -31,7 +33,7 @@ const PaymentScreen = ({route}) => {
         contact: '9191919191',
         name: 'Razorpay Software'
       },
-      theme: {color: '#F37254'}
+      theme: { color: '#F37254' }
     }
     RazorpayCheckout.open(options).then((data) => {
       // handle success
@@ -41,6 +43,35 @@ const PaymentScreen = ({route}) => {
       alert(`Error: ${error.code} | ${error.description}`);
     });
   }
+
+  const createOrder = async () => {
+    const userData = await AsyncStorage.getItem('access_token');
+    const time_slot = await AsyncStorage.getItem('time_slot');
+    const coupons_code = await AsyncStorage.getItem('coupanCode');
+    const service_description = await AsyncStorage.getItem('service_description');
+    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    const url = 'http://api.voltrify.in/user/orders';
+    result = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', // Optional, depending on your API requirements
+      },
+      body: JSON.stringify({
+        cart_id: "176bb606-5360-4f47-9b94-b840e0496fcf",
+        address_id: "a3163034-c326-4a68-ac9e-ce203b206180",
+        condition_id: "955c0518-a52f-4d39-add6-7dba0c9f5791",
+        time_slot: time_slot,
+        coupons_code: coupons_code,
+        payment_mode: "offline",
+        service_description: service_description,
+      }),
+    });
+
+    response = await result.json();
+    console.log('order data========', response);
+    Alert.alert(JSON.stringify(response));
+  };
 
   return (
     <View style={styles.mainView}>
@@ -55,15 +86,15 @@ const PaymentScreen = ({route}) => {
       <View>
         <View style={{ marginVertical: 5 }}>
           <Text style={styles.text_1}>Debit or Credit Card</Text>
-         <TouchableOpacity onPress={() => setModalVisible(true)}>
-         <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/debit.png')} />
-              <Text style={styles.text_2}>Add a card</Text>
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <View style={styles.paymentList}>
+              <View style={{ flexDirection: 'row' }}>
+                <Image source={require('../../Icons/debit.png')} />
+                <Text style={styles.text_2}>Add a card</Text>
+              </View>
+              <Image source={require('../../Icons/rightArrow.png')} />
             </View>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
-         </TouchableOpacity>
+          </TouchableOpacity>
         </View>
         <View style={{ marginVertical: 5 }}>
           <Text style={styles.text_1}>Wallet</Text>
@@ -75,10 +106,12 @@ const PaymentScreen = ({route}) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
           <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity onPress={() => createOrder()}>
+          <View style={{ flexDirection: 'row' }}>
               <Image source={require('../../Icons/phonePe.png')} />
               <Text style={styles.text_2}>Phone Pe</Text>
             </View>
+          </TouchableOpacity>
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
           <View style={styles.paymentList}>
@@ -318,7 +351,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'absolute',
     bottom: 0,
-    width:'100%'
+    width: '100%'
   },
 
   main_view: {
@@ -375,7 +408,7 @@ const styles = StyleSheet.create({
     borderColor: '#FB923C',
     top: 40,
     flexDirection: 'row',
-    alignItems:'center'
+    alignItems: 'center'
   },
   input_box3: {
     width: '49%',

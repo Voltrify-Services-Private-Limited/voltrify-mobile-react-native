@@ -7,10 +7,10 @@ import { useNavigation } from '@react-navigation/native';
 const AccountScreen = ({route}) => {
   const {logout} = React.useContext(AuthContext);
   const navigation = useNavigation();
-  const [user, setUser] = useState('');
+  const [user, setUser] = useState([]);
   useEffect(() => {
     getProfile();
-    console.log("-------------user Data",user.data)
+    console.log("-------------user Data",user)
   }, []);
  const getProfile = async () => {
    try {
@@ -30,12 +30,12 @@ const AccountScreen = ({route}) => {
      }
 
      const resData = await response.json();
-     setUser(resData);
+     setUser(JSON.stringify(resData.data));
    } catch (err) {
      console.log('get profile err --- ', err);
    }
  };
-  console.log('profile', user.data);
+  console.log('profile', user);
 
   return (
     <View style={styles.mainView}>

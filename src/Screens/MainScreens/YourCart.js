@@ -42,7 +42,7 @@ const YourCart = ({ route }) => {
   const deleteCart = async (id) => {
     const userData = await AsyncStorage.getItem('access_token');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-    
+    console.log(id);
     try {
       const response = await fetch(`http://api.voltrify.in//user/cart/${id}`, {
         method: 'DELETE',

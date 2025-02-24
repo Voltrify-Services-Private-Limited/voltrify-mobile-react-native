@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   Modal,
+  Alert,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -16,8 +17,9 @@ const ServiceDetails = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [addCart, setAddCart] = useState([]);
   const { service_id } = route.params;
+  const { service_description } = route.params;
+  const { deviceId} = route.params;
 
   const addCartBtn = () => {
     setModalVisible(!modalVisible);
@@ -26,12 +28,15 @@ const ServiceDetails = ({ route }) => {
 
   useEffect(() => {
     getAllService();
-    console.log('Service', service_id);
+    Alert.alert('Device Id', deviceId);
+    console.log('Service Id', service_id);
   }, []);
 
   const getAllService = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
+      await AsyncStorage.setItem("service_description",service_description);
+      await AsyncStorage.setItem("deviceId", deviceId);
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
 
       const response = await fetch(`http://api.voltrify.in/service/${service_id}`, {
@@ -73,6 +78,12 @@ const ServiceDetails = ({ route }) => {
     console.log('login data', response);
     Alert.alert(JSON.stringify(response));
   }
+
+  const serviceCardAdd = () => {
+    createCart();
+    navigation.navigate("SummaryScreen");
+  }
+
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
@@ -316,18 +327,24 @@ const ServiceDetails = ({ route }) => {
           </View>
 
           <View style={styles.cardBox}>
-            <View style={styles.card}>
+          <TouchableOpacity onPress={() => serviceCardAdd()}>
+          <View style={styles.card}>
               <Image source={require('../../Icons/serviceImage.png')} />
               <Text style={styles.cardText}>Service</Text>
             </View>
-            <View style={styles.card}>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => serviceCardAdd()}>
+          <View style={styles.card}>
               <Image source={require('../../Icons/serviceImage.png')} />
               <Text style={styles.cardText}>Service</Text>
             </View>
-            <View style={styles.card}>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => serviceCardAdd()}>
+          <View style={styles.card}>
               <Image source={require('../../Icons/serviceImage.png')} />
               <Text style={styles.cardText}>Service</Text>
             </View>
+          </TouchableOpacity>
           </View>
 
           <View style={styles.serviceBox}>
@@ -436,7 +453,7 @@ const ServiceDetails = ({ route }) => {
               </View>
               <View style={{ marginHorizontal: 5 }}>
                 <Image source={require('../../Icons/serviceImage2.png')} />
-                <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
+                <TouchableOpacity style={styles.addBtn} onPress={() => createCart()}>
                   <Text style={styles.addBtnText}>Add</Text>
                 </TouchableOpacity>
               </View>
@@ -492,7 +509,7 @@ const ServiceDetails = ({ route }) => {
               </View>
               <View style={{ marginHorizontal: 5 }}>
                 <Image source={require('../../Icons/serviceImage2.png')} />
-                <TouchableOpacity style={styles.addBtn}>
+                <TouchableOpacity style={styles.addBtn} onPress={() => createCart()}>
                   <Text style={styles.addBtnText}>Add</Text>
                 </TouchableOpacity>
               </View>
