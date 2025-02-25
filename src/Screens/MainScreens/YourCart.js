@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -72,7 +72,7 @@ const YourCart = ({ route }) => {
         <Image source={require('../../Icons/cartImage1.png')} />
         <View style={{ marginHorizontal: 10 }}>
           <Text style={styles.listTextHeading}>AC Service & Repair</Text>
-          <Text>1 Service </Text>
+          <Text>1 {item.id} </Text>
         </View>
       </View>
       <TouchableOpacity onPress={() => deleteCart(item.id)} style={{justifyContent:'center'}}>

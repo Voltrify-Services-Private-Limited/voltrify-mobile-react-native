@@ -79,7 +79,7 @@ const OtpScreen = ({ route, navigation }) => {
           id: user.data.id,
         });
       } else {
-        ToastAndroid.show('Something Wrong!', ToastAndroid.BOTTOM);
+        ToastAndroid.show('Something Wrong!', ToastAndroid.BOTTOM); 
       }
     } catch (err) {
       ToastAndroid.show(

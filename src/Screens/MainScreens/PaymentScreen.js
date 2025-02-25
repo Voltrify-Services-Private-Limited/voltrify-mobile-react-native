@@ -58,13 +58,13 @@ const PaymentScreen = ({ route }) => {
         'Content-Type': 'application/json', // Optional, depending on your API requirements
       },
       body: JSON.stringify({
-        cart_id: "176bb606-5360-4f47-9b94-b840e0496fcf",
-        address_id: "a3163034-c326-4a68-ac9e-ce203b206180",
-        condition_id: "955c0518-a52f-4d39-add6-7dba0c9f5791",
-        time_slot: time_slot,
-        coupons_code: coupons_code,
-        payment_mode: "offline",
-        service_description: service_description,
+        cart_id: "69827782-308b-4a93-81e3-2d450ee0b224",
+        address_id: "5923974f-b7de-4fb0-9f2a-53ca554df5c0",
+        condition_id: "e26ab9a8-dc0b-47da-8ea3-e8cde9d3bc64",
+        time_slot: "02:00 PM",
+        coupons_code: "WELCOME",
+        payment_mode: "online",
+        service_description: "damaged",
       }),
     });
 
