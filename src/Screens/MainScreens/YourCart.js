@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,7 +42,7 @@ const YourCart = ({ route }) => {
   const deleteCart = async (id) => {
     const userData = await AsyncStorage.getItem('access_token');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-    
+    console.log(id);
     try {
       const response = await fetch(`http://api.voltrify.in//user/cart/${id}`, {
         method: 'DELETE',
@@ -72,7 +72,7 @@ const YourCart = ({ route }) => {
         <Image source={require('../../Icons/cartImage1.png')} />
         <View style={{ marginHorizontal: 10 }}>
           <Text style={styles.listTextHeading}>AC Service & Repair</Text>
-          <Text>1 Service </Text>
+          <Text>1 {item.id} </Text>
         </View>
       </View>
       <TouchableOpacity onPress={() => deleteCart(item.id)} style={{justifyContent:'center'}}>

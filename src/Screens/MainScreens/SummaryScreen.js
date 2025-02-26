@@ -9,40 +9,41 @@ import {
   Modal,
   ImageBackground,
   FlatList,
+  Alert,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ChooseDay = [
-  { id: 1, day: 'Mon', },
-  { id: 2, day: 'Tue', },
-  { id: 3, day: 'Wed', },
-  { id: 4, day: 'Thu', },
-  { id: 5, day: 'Fri', },
-  { id: 6, day: 'Sat', },
+  { id: 1, day: 'Mon', selected: false },
+  { id: 2, day: 'Tue', selected: false },
+  { id: 3, day: 'Wed', selected: false },
+  { id: 4, day: 'Thu', selected: false },
+  { id: 5, day: 'Fri', selected: false },
+  { id: 6, day: 'Sat', selected: false },
 ]
 const ChooseTime = [
-  { id: 1, time: '08:00 AM', },
-  { id: 2, time: '08:00 AM', },
-  { id: 3, time: '08:00 AM', },
-  { id: 4, time: '08:00 AM', },
-  { id: 5, time: '08:00 AM', },
-  { id: 6, time: '08:00 AM', },
-  { id: 7, time: '08:00 AM', },
-  { id: 8, time: '08:00 AM', },
-  { id: 9, time: '08:00 AM', },
-  { id: 10, time: '08:00 AM', },
-  { id: 11, time: '08:00 AM', },
-  { id: 12, time: '08:00 AM', },
-  { id: 13, time: '08:00 AM', },
-  { id: 14, time: '08:00 AM', },
-  { id: 15, time: '08:00 AM', },
-  { id: 16, time: '08:00 AM', },
-  { id: 17, time: '08:00 AM', },
-  { id: 18, time: '08:00 AM', },
-  { id: 19, time: '08:00 AM', },
-  { id: 20, time: '08:00 AM', },
+  { id: 1, time: '08:00 AM', selected: false },
+  { id: 2, time: '08:10 AM', selected: false },
+  { id: 3, time: '08:20 AM', selected: false },
+  { id: 4, time: '08:30 AM', selected: false },
+  { id: 5, time: '08:40 AM', selected: false },
+  { id: 6, time: '08:50 AM', selected: false },
+  { id: 7, time: '09:00 AM', selected: false },
+  { id: 8, time: '09:10 AM', selected: false },
+  { id: 9, time: '09:20 AM', selected: false },
+  { id: 10, time: '09:30 AM', selected: false },
+  { id: 11, time: '09:40 AM', selected: false },
+  { id: 12, time: '09:50 AM', selected: false },
+  { id: 13, time: '10:00 AM', selected: false },
+  { id: 14, time: '10:10 AM', selected: false },
+  { id: 15, time: '10:20 AM', selected: false },
+  { id: 16, time: '10:30 AM', selected: false },
+  { id: 17, time: '10:40 AM', selected: false },
+  { id: 18, time: '10:50 AM', selected: false },
+  { id: 19, time: '11:00 AM', selected: false },
+  { id: 20, time: '11:10 AM', selected: false },
 ]
 
 const SummaryScreen = ({ route }) => {
@@ -51,8 +52,12 @@ const SummaryScreen = ({ route }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [coupanModal, setCoupanModal] = useState(false);
   const [coupanData, setCoupanData] = useState([]);
+  const [coupanCode, setCoupanCode] = useState("");
   const [dayData, setDayData] = useState(ChooseDay);
   const [timeData, setTime] = useState(ChooseTime);
+  const [currentLocation, setCurrentLocation] = useState("");
+  const [selectedId, setSelectedId] = useState([]);
+  const [selectedTime, setSelectedTime] = useState([]);
   const selectSlot = () => {
     setModalVisible(!modalVisible);
     setIsVisible(!isVisible);
@@ -61,14 +66,30 @@ const SummaryScreen = ({ route }) => {
     navigation.navigate("PaymentScreen");
   }
 
-  const [bgColor, setBgColor] = useState('#F6F6F6');
-  const [textColor, setTextColor] = useState('#000');
-
   // Function to handle text press
-  const handlePress = () => {
+  const handlePressDay = async (day) => {
     // Change the text color on press
-    setBgColor(bgColor === '#F6F6F6' ? '#FB923C' : '#F6F6F6');
-    setTextColor(textColor === '#000' ? '#fff' : '#000');
+    Alert.alert(JSON.stringify(day));
+    if (selectedId.includes(day)) {
+      // If the item is already selected, remove it from the selectedIds array
+      setSelectedId(selectedId.filter(selectedId => selectedId !== day));
+    } else {
+      // If the item is not selected, add it to the selectedIds array
+      setSelectedId([...selectedId, day]);
+    }
+    await AsyncStorage.setItem("slot_no_day", JSON.stringify(selectedId));
+  };  // Function to handle text press
+  const handlePressTime = async (time) => {
+    // Change the text color on press
+    Alert.alert(JSON.stringify(time));
+    if (selectedTime.includes(time)) {
+      // If the item is already selected, remove it from the selectedIds array
+      setSelectedTime(selectedTime.filter(selectedTime => selectedTime !== time));
+    } else {
+      // If the item is not selected, add it to the selectedIds array
+      setSelectedTime([...selectedTime, time]);
+    }
+    await AsyncStorage.setItem("time_slot", JSON.stringify(selectedTime));
   };
 
   useEffect(() => {
@@ -79,6 +100,8 @@ const SummaryScreen = ({ route }) => {
   const getCoupans = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
+      const lat_long = await AsyncStorage.getItem("userAddress");
+      setCurrentLocation(lat_long);
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
 
       const response = await fetch('http://api.voltrify.in/user/coupons', {
@@ -99,10 +122,16 @@ const SummaryScreen = ({ route }) => {
     }
   };
 
+  const handlePressCode = async(code) =>{
+    await AsyncStorage.setItem("coupanCode", code);
+    setCoupanModal(!coupanModal);
+  }
+
 
   const CoupannsItem = ({ item }) => (
     <View style={{ width: 'auto', margin: 5 }}>
-      <ImageBackground
+    <TouchableOpacity onPress={() => handlePressCode(item.code) }>
+    <ImageBackground
         style={styles.coupanCard}
         source={require('../../Icons/coupan.png')}
         resizeMode="cover">
@@ -110,24 +139,40 @@ const SummaryScreen = ({ route }) => {
         <Text style={styles.dicount}>{item.discount} %</Text>
         <Text style={styles.code}>{item.code}</Text>
       </ImageBackground>
+    </TouchableOpacity>
     </View>
   );
-  const Choose_Day_Date = ({ item }) => (
-    <TouchableOpacity onPress={() => handlePress()}>
-      <View style={[styles.dayCard, { backgroundColor: bgColor }]}>
+  const Choose_Day_Date = ({ item }) => {
+    const backgroundColor = selectedId.includes(item.day) ? 'orange' : 'white';
+    const textColor = selectedId.includes(item.day) ? 'white' : 'black';
+    const borderColor = selectedId.includes(item.day) ? 'orange' : 'black';
+    return (
+      <TouchableOpacity
+        onPress={() => handlePressDay(item.day)}
+        style={[styles.dayCard, { backgroundColor, borderColor: borderColor }]}
+      >
         <Text style={{ fontSize: 10, fontWeight: 400, lineHeight: 12, textAlign: "center", color: textColor }}>{item.day}</Text>
         <Text style={{ fontSize: 10, fontWeight: 600, lineHeight: 12, textAlign: "center", color: textColor }}>{item.id}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-  const Choose_Time = ({ item }) => (
-    <TouchableOpacity onPress={() => handlePress()}>
-      <View style={[styles.timeCard, { backgroundColor: bgColor, justifyContent:'center' }]}>
-        <Text style={styles.time_text}>{item.time}</Text>
+      </TouchableOpacity>
+    );
+  };
+  const Choose_Time = ({ item }) => {
+    const backgroundColor = selectedTime.includes(item.time) ? 'orange' : 'white';
+    const textColor = selectedTime.includes(item.time) ? 'white' : 'black';
+    const borderColor = selectedTime.includes(item.time) ? 'orange' : 'black';
+    return (
+      <TouchableOpacity onPress={() => handlePressTime(item.time)}>
+        <View style={[styles.timeCard, { backgroundColor, justifyContent: 'center', borderColor: borderColor }]}>
+          <Text style={[styles.time_text, { color: textColor }]}>{item.time}</Text>
+        </View>
+      </TouchableOpacity>
+    )
+  }
 
-      </View>
-    </TouchableOpacity>
-  );
+  const deviceCondition = () =>{
+    setModalVisible(!modalVisible);
+    navigation.navigate("DeviceCondition");
+  }
 
   return (
     <View style={styles.mainView}>
@@ -167,7 +212,7 @@ const SummaryScreen = ({ route }) => {
             <Text style={styles.text_6}>View Details</Text>
           </View>
         </View>
-        <Text style={styles.heading1}>Frequenty added together</Text>
+        {/* <Text style={styles.heading1}>Frequenty added together</Text>
 
         <View style={styles.sliderList}>
           <View style={styles.sliderCard}>
@@ -264,7 +309,7 @@ const SummaryScreen = ({ route }) => {
               </View>
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
         <View style={styles.section_3}>
           <Text style={styles.text_7}>Service preference</Text>
           <View style={{ flexDirection: 'row', marginVertical: 5 }}>
@@ -325,7 +370,7 @@ const SummaryScreen = ({ route }) => {
           <View style={styles.headerLeft}>
             <Image source={require('../../Icons/locationIcon.png')} />
             <Text style={styles.headerText_1}>
-              B-22, Veena Nagar, MR-10, Indore
+              {currentLocation}
             </Text>
             <Image source={require('../../Icons/downArrow.png')} />
           </View>
@@ -376,7 +421,7 @@ const SummaryScreen = ({ route }) => {
             <View style={styles.addressView}>
               <Image source={require('../../Icons/locationIcon.png')} />
               <Text style={styles.headerText_1}>
-                B-22, Veena Nagar, MR-10
+                {currentLocation}
               </Text>
               <Image source={require('../../Icons/downArrow.png')} />
             </View>
@@ -404,7 +449,7 @@ const SummaryScreen = ({ route }) => {
               keyExtractor={item => "#" + item.id}
               numColumns={4}
             />
-            <TouchableOpacity style={styles.buttonBottomModal} onPress={() => setModalVisible(!modalVisible)}>
+            <TouchableOpacity style={styles.buttonBottomModal} onPress={() => deviceCondition()}>
               <Text style={styles.buttonText}>Proceed to checkout </Text>
             </TouchableOpacity>
           </View>
@@ -904,15 +949,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginVertical: 10,
     borderWidth: 1,
-    borderColor: '#A09CAB',
-    marginHorizontal:15,
+    marginHorizontal: 15,
   },
-  time_text:{
-    fontSize:10,
-    fontWeight:400,
-    color:'#000000',
-    lineHeight:12,
-    textAlign:"center",
+  time_text: {
+    fontSize: 10,
+    fontWeight: 400,
+    color: '#000000',
+    lineHeight: 12,
+    textAlign: "center",
   }
 
 });

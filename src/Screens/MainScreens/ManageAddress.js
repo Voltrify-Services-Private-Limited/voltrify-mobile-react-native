@@ -140,7 +140,8 @@ const ManageAddress = ({ route }) => {
         </TouchableOpacity>
       </View>
       <Text style={styles.boxText4}>
-        {item.addressLine1} {item.addressLine2} {item.landmark} {item.city} {item.state} {item.pincode} {'\n'} Ph: +91 {item.phoneNumber}
+        {item.addressLine1} {item.addressLine2} {item.landmark} {item.city} {item.state} {item.pincode} {'\n'} 
+        Ph: +91 {item.phoneNumber} 
       </Text>
       
       {/* ================= Delete Modal Start ========= */}

@@ -4,38 +4,30 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DashboardScreen = ({ route }) => {
-  const [getData, setGetData] = useState('');
   const [serviceData, setServiceData] = useState([]);
-  const [categoriesData, setCategorise] = useState([])
-  const [getImage, setGetImage] = useState('');
-  const [location, setLocationData] = useState('');
+  const [categoriesData, setCategorise] = useState([]);
+  const [devicesData, setDevicesData] = useState([]);
   const [flat_no, setFlatNo] = useState('');
+  const [currentLocation, setCurrentLocation] = useState("");
   const navigation = useNavigation();
-  const dataView = async () => {
-    setGetData(data);
-    console.log(data);
-   const latitudeData = await AsyncStorage.getItem('access_token');
-  
-   
-  //  setLocationData(latitudeData);
-  };
 
-  console.log('latidjhghjgjhd----', location);
+
 
   useEffect(() => {
-    dataView();
     getAllService();
     getAllCategorise();
+    getAllDevices();
     refreshTokenApi();
     getAddress();
+    Alert.alert('==== Id =====', JSON.stringify(serviceData));
   }, []);
 
-
+////////////////// Categorises Api Call Start ////////////////
   const getAllCategorise = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
-      const locationDatta = await AsyncStorage.getItem('latlongdata');
-      setLocationData(locationDatta)
+      const lat_long = await AsyncStorage.getItem("userAddress");
+      setCurrentLocation(lat_long);
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
       const response = await fetch('http://api.voltrify.in/categories', {
         method: 'GET',
@@ -54,7 +46,26 @@ const DashboardScreen = ({ route }) => {
       console.log('Categories Data err --- ', err);
     }
   };
+  
+  const categoriseItem = ({ item }) => (
+    <View style={styles.serviceCard}>
+      <TouchableOpacity onPress={() => navigation.navigate('CategoriseDetails', {
+        id: item.id,
+      })}
+        style={[styles.card, { backgroundColor: '#FB923C' }]}>
+        <Text style={[styles.cardText, { color: '#fff' }]}>
+          {item.name}
+        </Text>
+        <Image
+          source={{ uri: item.image }}
+          style={{ marginVertical: 5, width: 50, height: 50, resizeMode: 'contain' }}
+        />
+      </TouchableOpacity>
+    </View>
+  );
 
+////////////////// Categorises Api Call End ////////////////
+////////////////// Services Api Call Start ////////////////
   const getAllService = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
@@ -78,33 +89,18 @@ const DashboardScreen = ({ route }) => {
     }
   };
 
-  const categoriseItem = ({ item }) => (
-    <View style={styles.serviceCard}>
-      <TouchableOpacity   onPress={() => navigation.navigate('CategoriseDetails',{
-              id:item.id,
-            })}
-        style={[styles.card, { backgroundColor: '#FB923C' }]}>
-        <Text style={[styles.cardText, { color: '#fff' }]}>
-          {item.name}
-        </Text>
-        <Image
-          source={{uri:item.image}}
-          style={{ marginVertical: 5,width: 50, height: 50, resizeMode:'contain' }}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-
   const serviceItem = ({ item }) => (
     <View style={styles.sliderCard}>
       <TouchableOpacity
         style={styles.cardBox}
         onPress={() => navigation.navigate('ServiceDetails', {
           service_id: item.id,
+          deviceId: item.deviceId,
+          service_description: item.description,
         })}>
         <Image
           source={require('../../Icons/image1.png')}
-          style={{ width: '100%', borderRadius: 10,height:'100' }}
+          style={{ width: '100%', borderRadius: 10, height: '100' }}
         />
         <Text style={styles.cardNameText}>
           {item.name}
@@ -132,13 +128,62 @@ const DashboardScreen = ({ route }) => {
     </View>
   );
 
-  ////////////// Refersh Token Api Call ///////////////
+////////////////// Services Api Call End ////////////////
+////////////////// Devices Api Call Start ////////////////
+const getAllDevices = async () => {
+  try {
+    const userData = await AsyncStorage.getItem('access_token');
+    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+
+    const response = await fetch('http://api.voltrify.in/devices', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', // Optional, depending on your API requirements
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const resData = await response.json();
+    setDevicesData(resData.data);
+  } catch (err) {
+    console.log('Service Data err --- ', err);
+  }
+};
+
+const devicesItem = ({ item }) => (
+  <View style={styles.sliderCard}>
+    <TouchableOpacity
+      style={styles.cardBox}
+      onPress={() => navigation.navigate('ServiceDetails', {
+        deviceId: item.id,
+        service_description: item.description,
+      })}>
+      <Image
+        source={require('../../Icons/image1.png')}
+        style={{ width: '100%', borderRadius: 10, height: '100' }}
+      />
+      <Text style={styles.cardNameText}>
+        {item.name}
+      </Text>
+      <Text style={styles.cardText2}>
+        {item.description}
+      </Text>
+    </TouchableOpacity>
+  </View>
+);
+
+////////////////// Services Api Call End ////////////////
+
+  ////////////// Refersh Token Api Call Start ///////////////
 
   const refreshTokenApi = async () => {
     const accessToken = await AsyncStorage.getItem('access_token');
     const refreshToken = await AsyncStorage.getItem('refresh_token');
     const token = JSON.parse(accessToken); // Assuming userData is a JSON string containing the token
-     const refresh = JSON.parse(refreshToken);
+    const refresh = JSON.parse(refreshToken);
     // setRefresh_Token(token);
     const url = 'http://api.voltrify.in/auth/user/renew-token';
     result = await fetch(url, {
@@ -157,16 +202,21 @@ const DashboardScreen = ({ route }) => {
     await AsyncStorage.setItem('access_token', JSON.stringify(response.data.accessToken));
     // Alert.alert(JSON.stringify(response.data.accessToken));
   };
+////////////// Refersh Token Api Call End ///////////////
 
-  const getAddress = async() =>{
-   const getAdd_1 = await AsyncStorage.getItem("address1");
-   const getAdd_2 = await AsyncStorage.getItem("address2");
-   const getLandmark = await AsyncStorage.getItem("landmark");
-   const getCity = await AsyncStorage.getItem("city");
-   const getState = await AsyncStorage.getItem("state");
+////////////// Get Address Start ///////////////
+
+  const getAddress = async () => {
+    const getAdd_1 = await AsyncStorage.getItem("address1");
+    const getAdd_2 = await AsyncStorage.getItem("address2");
+    const getLandmark = await AsyncStorage.getItem("landmark");
+    const getCity = await AsyncStorage.getItem("city");
+    const getState = await AsyncStorage.getItem("state");
     const getPincode = await AsyncStorage.getItem("pincode");
     setFlatNo(getAdd_1 + getAdd_2 + getLandmark + getCity + getState + getPincode);
   }
+
+////////////// Get Address Start ///////////////
 
   return (
     <View style={styles.mainView}>
@@ -174,6 +224,8 @@ const DashboardScreen = ({ route }) => {
         <View style={styles.headerLeft}>
           <Image source={require('../../Icons/locationIcon.png')} />
           <Text style={styles.headerText_1}>
+
+            {currentLocation}
             {flat_no}
           </Text>
           <Image source={require('../../Icons/downArrow.png')} />
@@ -210,7 +262,7 @@ const DashboardScreen = ({ route }) => {
           />
         </View>
         <View>
-          <Text style={styles.heading1}>Most Used Services</Text>
+          <Text style={styles.heading1}>Most Used Service</Text>
           <Text style={styles.text_1}>Find the right services for you!</Text>
         </View>
         <View style={styles.serviceView}>
@@ -232,6 +284,19 @@ const DashboardScreen = ({ route }) => {
               horizontal={true}
               data={serviceData}
               renderItem={serviceItem}
+              keyExtractor={(item) => item.id.toString()}
+            />
+          </View>
+        </View>  
+          <View>
+          <Text style={styles.heading1}>Most Devices</Text>
+          <Text style={styles.text_1}>Book the Devices for you!</Text>
+
+          <View style={styles.sliderList}>
+            <FlatList
+              horizontal={true}
+              data={devicesData}
+              renderItem={devicesItem}
               keyExtractor={(item) => item.id.toString()}
             />
           </View>
@@ -263,7 +328,7 @@ const styles = StyleSheet.create({
     color: '#000000B2',
     marginHorizontal: 5,
     marginTop: 1,
-    letterSpacing:1,
+    letterSpacing: 1,
   },
   headerRight: {
     flexDirection: 'row',

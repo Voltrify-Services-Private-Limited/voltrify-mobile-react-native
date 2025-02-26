@@ -50,6 +50,7 @@ const LocationScreen = ({ route }) => {
 
   const setUserId = async () => {
     await AsyncStorage.setItem("userId", id);
+    await AsyncStorage.setItem("userAddress", UserAddress);
   }
 
   const UserLoginApi = async () => {
@@ -89,8 +90,29 @@ const LocationScreen = ({ route }) => {
     setModalVisible(!modalVisible);
   };
 
-  const locationAddress = () => {
+//   const locationAddress = () => {
+//     Geocoding.init('AIzaSyD33wZr809ySlFdDUF_UnxRB0TO91R3uqY');
+//     //     const latitude = 37.7749; // Example latitude (San Francisco)
+// //     const longitude = -122.4194; // Example longitude (San Francisco)
+//     // Call reverse geocoding
+//     Geocoding.from(location.latitude, location.longitude)
+//       .then((json) => {
+//         if (json.results && json.results.length > 0) {
+//           const formattedAddress = json.results[0].formatted_address;
+//           setUserAddress(formattedAddress);
+//         } else {
+//           setError('No address found for these coordinates.');
+//         }
+//       })
+//       .catch((err) => {
+//         setError('Error: ' + err.message);
+//       });
+//   }
+
+  useEffect(() => {
+    // Ensure API is initialized with a valid key
     Geocoding.init('AIzaSyD33wZr809ySlFdDUF_UnxRB0TO91R3uqY');
+
     // Call reverse geocoding
     Geocoding.from(location.latitude, location.longitude)
       .then((json) => {
@@ -104,7 +126,7 @@ const LocationScreen = ({ route }) => {
       .catch((err) => {
         setError('Error: ' + err.message);
       });
-  }
+  }, []);
 
   const getCurrentPosition = async () => {
     Geolocation.getCurrentPosition(
@@ -123,10 +145,15 @@ const LocationScreen = ({ route }) => {
         });
       }
     );
-    locationAddress();
-    login(tokens);
-    await AsyncStorage.setItem("latlongdata", JSON.stringify(UserAddress));
   };
+
+  useEffect(() => {
+    getCurrentPosition();
+  },[]);
+
+  const getToken = async() =>{
+    login(tokens);
+  }
 
 
   return (
@@ -176,12 +203,12 @@ const LocationScreen = ({ route }) => {
                 />
               </View>
               <View style={{ paddingHorizontal: 30 }}>
-                <Text style={styles.text_3Modal}>Sagar, Madhya Pradesh</Text>
+                <Text style={styles.text_3Modal}>{UserAddress}</Text>
                 <Text style={styles.text_4Modal}>
-                  Krishna Nagar, Makronia, Sagar (M.P.) {'\n'}
+                  {UserAddress} (M.P.) {'\n'}
                   Ph: +91 1234567890
                 </Text>
-                <ScrollView style={{ height: 300, padding: 0 }}>
+                <ScrollView style={{ height: 200, marginTop:10, }}>
                   <View style={styles.input_boxModal}>
                     <TextInput
                       placeholder="First Name"
@@ -273,7 +300,7 @@ const LocationScreen = ({ route }) => {
                     />
                   </View>
                 </ScrollView>
-                <View style={{ flexDirection: 'row', marginTop: 50 }}>
+                <View style={{ flexDirection: 'row', marginTop: 50, }}>
                   <TouchableOpacity style={styles.btn1Modal}>
                     <Text style={styles.btnText1Modal}>Home</Text>
                   </TouchableOpacity>
@@ -306,14 +333,14 @@ const LocationScreen = ({ route }) => {
               alignSelf: 'center',
             }}></View>
         </View>
-        <Text style={styles.text_3}>Enable Location</Text>
+        <Text style={styles.text_3}>Enable Location </Text>
         <Text style={styles.text_4}>
           Please enable your location {'\n'} so that we can serve you better
         </Text>
         <Image source={require('../../Icons/Group.png')} />
         <TouchableOpacity
           style={[styles.button]}
-          onPress={() => getCurrentPosition()}>
+          onPress={() => getToken()}>
           <Text style={styles.text_5}>Enable Location</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -489,7 +516,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 16,
     borderColor: '#FB923C',
-    top: 40,
+    top: 10,
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 10,

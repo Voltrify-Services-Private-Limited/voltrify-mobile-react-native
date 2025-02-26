@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, Image, TouchableOpacity, Alert} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {AuthContext} from '../../Component/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,10 +7,11 @@ import { useNavigation } from '@react-navigation/native';
 const AccountScreen = ({route}) => {
   const {logout} = React.useContext(AuthContext);
   const navigation = useNavigation();
-  const [user, setUser] = useState('');
+  const [user, setUser] = useState([]);
   useEffect(() => {
     getProfile();
-    console.log("-------------user Data",user.data)
+    console.log("-------------user Data",user)
+    Alert.alert(JSON.stringify(user));
   }, []);
  const getProfile = async () => {
    try {
@@ -30,12 +31,12 @@ const AccountScreen = ({route}) => {
      }
 
      const resData = await response.json();
-     setUser(resData);
+     setUser(JSON.stringify(resData));
    } catch (err) {
      console.log('get profile err --- ', err);
    }
  };
-  console.log('profile', user.data);
+  console.log('profile', user);
 
   return (
     <View style={styles.mainView}>
@@ -47,6 +48,11 @@ const AccountScreen = ({route}) => {
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/user.png')} />
             <View style={{justifyContent: 'center'}}>
+                 {/* {user.map(item => (
+                        <View key={item}>
+                          <Text style={styles.orderText1}>{item.firstName}</Text>
+                        </View>
+                      ))} */}
               {/* <Text style={styles.userText}>{user.data.firstName}</Text>
               <Text style={styles.numberText}>+91 {user.data.phoneNumber}</Text> */}
             </View>
@@ -84,7 +90,7 @@ const AccountScreen = ({route}) => {
         <View style={styles.listItem}>
           <TouchableOpacity
             style={styles.rightSide}
-            onPress={() => navigation.navigate('PaymentScreen')}>
+            onPress={() => navigation.navigate('PaymentCard')}>
             <Image source={require('../../Icons/accountIcon3.png')} />
             <Text style={styles.listText}>Manage Payment Methods </Text>
           </TouchableOpacity>

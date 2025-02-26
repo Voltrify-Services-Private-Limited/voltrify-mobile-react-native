@@ -19,6 +19,9 @@ import PaymentScreen from '../Screens/MainScreens/PaymentScreen';
 import AboutUs from '../Screens/MainScreens/AboutUs';
 import ServiceViewCart from '../Screens/MainScreens/ServiceViewCart';
 import CategoriseDetails from '../Screens/MainScreens/CategoriseDetails';
+import DeviceCondition from '../Screens/MainScreens/DeviceCondition';
+import PaymentCard from '../Screens/MainScreens/PaymentCard';
+import EditOrder from '../Screens/MainScreens/EditOrder';
 
 
 // ------ screens -----\\
@@ -49,6 +52,9 @@ const Mainroute = () => {
       <authstack.Screen name="PaymentScreen" component={PaymentScreen} />
       <authstack.Screen name="AboutUs" component={AboutUs} />
       <authstack.Screen name="CategoriseDetails" component={CategoriseDetails} />
+      <authstack.Screen name="DeviceCondition" component={DeviceCondition} />
+      <authstack.Screen name="PaymentCard" component={PaymentCard} />
+      <authstack.Screen name="EditOrder" component={EditOrder} />
     </authstack.Navigator>
   );
 };
