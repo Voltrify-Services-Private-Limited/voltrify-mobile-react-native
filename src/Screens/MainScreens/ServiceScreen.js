@@ -124,7 +124,7 @@ const ServiceScreen = ({ route }) => {
           <Text style={styles.headerText_1}>
             B-22, Veena Nagar, MR-10, Indore
           </Text>
-          <Image source={require('../../Icons/downArrow.png')} />
+          <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}}  />
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity

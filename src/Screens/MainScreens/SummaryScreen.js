@@ -69,7 +69,7 @@ const SummaryScreen = ({ route }) => {
   // Function to handle text press
   const handlePressDay = async (day) => {
     // Change the text color on press
-    Alert.alert(JSON.stringify(day));
+    // Alert.alert(JSON.stringify(day));
     if (selectedId.includes(day)) {
       // If the item is already selected, remove it from the selectedIds array
       setSelectedId(selectedId.filter(selectedId => selectedId !== day));
@@ -81,7 +81,7 @@ const SummaryScreen = ({ route }) => {
   };  // Function to handle text press
   const handlePressTime = async (time) => {
     // Change the text color on press
-    Alert.alert(JSON.stringify(time));
+    // Alert.alert(JSON.stringify(time));
     if (selectedTime.includes(time)) {
       // If the item is already selected, remove it from the selectedIds array
       setSelectedTime(selectedTime.filter(selectedTime => selectedTime !== time));
@@ -171,7 +171,7 @@ const SummaryScreen = ({ route }) => {
 
   const deviceCondition = () =>{
     setModalVisible(!modalVisible);
-    navigation.navigate("DeviceCondition");
+    navigation.navigate("DeviceCondition",{time_slot: selectedTime});
   }
 
   return (
@@ -372,7 +372,7 @@ const SummaryScreen = ({ route }) => {
             <Text style={styles.headerText_1}>
               {currentLocation}
             </Text>
-            <Image source={require('../../Icons/downArrow.png')} />
+            <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}}  />
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity
@@ -423,7 +423,7 @@ const SummaryScreen = ({ route }) => {
               <Text style={styles.headerText_1}>
                 {currentLocation}
               </Text>
-              <Image source={require('../../Icons/downArrow.png')} />
+              <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}}  />
             </View>
             <Text style={{ fontSize: 12, fontWeight: 600, lineHeight: 14.4, color: "#1C1B1F" }}>When should the professional arrive?</Text>
             <Text style={{ fontSize: 10, lineHeight: 15, fontWeight: 400, color: "#A09CAB" }}>Your service will take approx. 40 Mins</Text>

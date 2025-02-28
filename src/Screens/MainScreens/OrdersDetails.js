@@ -428,7 +428,7 @@ const OrdersDetails = ({ route }) => {
               <Text style={styles.headerText_1}>
                 {currentLocation}
               </Text>
-              <Image source={require('../../Icons/downArrow.png')} />
+              <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}}  />
             </View>
             <Text style={{ fontSize: 12, fontWeight: 600, lineHeight: 14.4, color: "#1C1B1F" }}>When should the professional arrive?</Text>
             <Text style={{ fontSize: 10, lineHeight: 15, fontWeight: 400, color: "#A09CAB" }}>Your service will take approx. 40 Mins</Text>

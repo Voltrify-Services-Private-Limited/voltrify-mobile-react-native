@@ -24,16 +24,23 @@ const DeviceCondition = ({ route }) => {
     const [text, setText] = useState('');
     const [company, setCompany] = useState('');
     const [modal, setModal] = useState('');
-    const [newData, setNewData] = useState([]);
     const navigation = useNavigation();
-
+    const [clicked, setClicked] = useState(false);
+    const [selectedCountry, setSelectedCountry] = useState('');
+    const [conditionId, setConditonId] = useState('');
+    const { time_slot } = route.params;
     //////////////////// Device Condition Get Api /////////////
 
 
     useEffect(() => {
         getdeviceCondition();
-        console.log(condition);
+        console.log(conditionId)
+        setdeviceCondition();
     }, []);
+
+    const setdeviceCondition = async () => {
+        await AsyncStorage.setItem('condition_id', conditionId);
+    }
 
     const getdeviceCondition = async () => {
         try {
@@ -54,24 +61,15 @@ const DeviceCondition = ({ route }) => {
             }
             const resData = await response.json();
             setCondition(resData.data.conditions);
-            setNewData(JSON.stringify(condition));
         } catch (err) {
             console.log('Condition Data err --- ', err);
         }
     };
 
-    const paymentBtn = () => {
-        navigation.navigate("PaymentScreen");
+    const paymentBtn = async() => {
+        navigation.navigate("PaymentScreen", { condition_Id: conditionId});
+        await AsyncStorage.setItem('timeSlot', JSON.stringify(time_slot));
     }
-
-    // Convert object values to an array
-    // const newArray = [...Object.values(condition)]; // This is valid
-
-    const renderItem = ({ item }) => (
-        <TouchableOpacity style={{ width: "auto", height: 100, }}>
-            <Text style={{ color: '#000', fontSize: 20, }}>{item}</Text>
-        </TouchableOpacity>
-    );
     return (
         <View style={styles.mainView}>
             <View style={styles.topHeader}>
@@ -84,24 +82,64 @@ const DeviceCondition = ({ route }) => {
             </View>
             <View style={{ padding: 10 }}>
                 <Text style={styles.lableText}>Select Device</Text>
-                {/* <FlatList
-                    data={newData}
-                    renderItem={renderItem}
-                    horizontal={true}
-                    keyExtractor={item => item.id} />
-                */}
-                <Dropdown
+                <TouchableOpacity
                     style={styles.dropdownStyle}
-                    data={data}
-                    labelField="label"
-                    valueField="value"
-                    placeholderStyle={{color:'#000'}}
-                    placeholder="Select Device Condition"
-                    value={selectedValue}
-                    onChange={item => {
-                        setSelectedValue(item.deviceId);
-                    }}
-                />
+                    onPress={() => {
+                        setClicked(!clicked);
+                    }}>
+                    <Text style={{ fontWeight: '600' }}>
+                        {selectedCountry == '' ? 'Select Condition' : selectedCountry}
+                    </Text>
+                    {clicked ? (
+                        <Image
+                            source={require('../../Icons/downArrow.png')}
+                            style={{ width: 20, height: 20 }}
+                        />
+                    ) : (
+                        <Image
+                            source={require('../../Icons/downArrow.png')}
+                            style={{ width: 20, height: 20 }}
+                        />
+                    )}
+                </TouchableOpacity>
+                {clicked ? (
+                    <View
+                        style={{
+                            elevation: 5,
+                            marginTop: 100,
+                            height: 'auto',
+                            alignSelf: 'center',
+                            width: '100%',
+                            backgroundColor: '#fff',
+                            borderRadius: 5,
+                            zIndex: 4,
+                            position: 'absolute',
+                        }}>
+
+                        {condition.map(item => (
+                            <View key={item}>
+                                <TouchableOpacity
+                                    style={{
+                                        width: '85%',
+                                        alignSelf: 'center',
+                                        height: 50,
+                                        justifyContent: 'center',
+                                        borderBottomWidth: 0.5,
+                                        borderColor: '#8e8e8e',
+                                    }}
+                                    onPress={() => {
+                                        setSelectedCountry(item.condition);
+                                        setConditonId(item.id);
+                                        setClicked(!clicked);
+                                    }}>
+                                    <Text style={styles.orderText2}>
+                                        {item.condition}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </View>
+                ) : null}
                 <View>
                     <Text style={styles.lableText}>User Description</Text>
                     <TextInput
@@ -182,12 +220,17 @@ const styles = StyleSheet.create({
     },
     dropdownStyle: {
         height: 50,
+        width: '100%',
         borderColor: '#FB923C',
         borderWidth: 1,
         borderRadius: 5,
         paddingHorizontal: 10,
         marginVertical: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         color: '#000',
+        alignSelf: 'center',
+        alignItems: 'center',
     },
     textarea: {
         height: 150, // Adjust height as needed
