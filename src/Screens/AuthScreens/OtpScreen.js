@@ -39,7 +39,7 @@ const OtpScreen = ({ route, navigation }) => {
 
   const VerifyOtpApi = async () => {
     try {
-      let data = {
+      const data = {
         phoneNumber: phoneNumber,
         otp: otpNumber,
       };

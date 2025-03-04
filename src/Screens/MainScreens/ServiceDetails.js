@@ -28,7 +28,6 @@ const ServiceDetails = ({ route }) => {
 
   useEffect(() => {
     getAllService();
-    Alert.alert('Device Id', deviceId);
     console.log('Service Id', service_id);
   }, []);
 

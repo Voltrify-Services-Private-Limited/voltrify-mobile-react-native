@@ -12,35 +12,45 @@ import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import RazorpayCheckout from 'react-native-razorpay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 const PaymentScreen = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [number, setNumber] = useState('');
+  const [cart_id, setCart_id] = useState('27847d0a-fad8-42e4-a70d-15e67ba4ca54');
+  const [address_id, setAddress_id] = useState('a3163034-c326-4a68-ac9e-ce203b206180');
+  const { condition_Id } = route.params;
+  const { time_slot } = route.params;
 
   ////////////// Payment Methods ///////////////
 
   const paymentHandle = async () => {
     const options = {
+      orderId: "904bf10a-ff89-40b2-b1be-d68b57e69914",
       description: 'Credits towards consultation',
       image: 'https://i.imgur.com/3g7nmJC.png',
       currency: 'INR',
-      key: '', // Your api key
-      amount: '5000',
+      key: 'rzp_test_hlMav0jYthWSud',
+      amount: '1000',
+      external: {
+        wallets: ['paytm']
+      },
       name: 'foo',
       prefill: {
-        email: 'void@razorpay.com',
-        contact: '9191919191',
-        name: 'Razorpay Software'
+        email: 'akshay@razorpay.com',
+        contact: '8955806560',
+        name: 'Akshay Bhalotia'
       },
       theme: { color: '#F37254' }
     }
     RazorpayCheckout.open(options).then((data) => {
       // handle success
-      alert(`Success: ${data.razorpay_payment_id}`);
+      Alert.alert(`Success: ${JSON.stringify(data)}`);
     }).catch((error) => {
       // handle failure
-      alert(`Error: ${error.code} | ${error.description}`);
+      Alert.alert(`Error: ${error.code} | ${error.description}`);
+    });
+    RazorpayCheckout.onExternalWalletSelection(data => {
+      Alert.alert(`External Wallet Selected: ${data.external_wallet} `);
     });
   }
 
@@ -49,7 +59,9 @@ const PaymentScreen = ({ route }) => {
     const time_slot = await AsyncStorage.getItem('time_slot');
     const coupons_code = await AsyncStorage.getItem('coupanCode');
     const service_description = await AsyncStorage.getItem('service_description');
+    const timeSlot = await AsyncStorage.getItem('timeSlot');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    const time = JSON.parse(timeSlot);
     const url = 'http://api.voltrify.in/user/orders';
     result = await fetch(url, {
       method: 'POST',
@@ -58,16 +70,17 @@ const PaymentScreen = ({ route }) => {
         'Content-Type': 'application/json', // Optional, depending on your API requirements
       },
       body: JSON.stringify({
-        cart_id: "69827782-308b-4a93-81e3-2d450ee0b224",
-        address_id: "5923974f-b7de-4fb0-9f2a-53ca554df5c0",
-        condition_id: "e26ab9a8-dc0b-47da-8ea3-e8cde9d3bc64",
-        time_slot: "02:00 PM",
-        coupons_code: "WELCOME",
+        cart_id: "ebb52f0b-477c-47d9-b351-15320931ab6e",
+        address_id: address_id,
+        condition_id: condition_Id,
+        time_slot: time,
+        coupons_code: coupons_code,
         payment_mode: "online",
         service_description: "damaged",
+        date: "02-02-2025",
       }),
     });
-
+    console.log('======', time + coupons_code + service_description + condition_Id + cart_id + address_id)
     response = await result.json();
     console.log('order data========', response);
     Alert.alert(JSON.stringify(response));
@@ -106,12 +119,12 @@ const PaymentScreen = ({ route }) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
           <View style={styles.paymentList}>
-          <TouchableOpacity onPress={() => createOrder()}>
-          <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/phonePe.png')} />
-              <Text style={styles.text_2}>Phone Pe</Text>
-            </View>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => paymentHandle()}>
+              <View style={{ flexDirection: 'row' }}>
+                <Image source={require('../../Icons/phonePe.png')} />
+                <Text style={styles.text_2}>Phone Pe</Text>
+              </View>
+            </TouchableOpacity>
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
           <View style={styles.paymentList}>

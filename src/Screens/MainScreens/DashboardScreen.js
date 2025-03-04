@@ -19,7 +19,6 @@ const DashboardScreen = ({ route }) => {
     getAllDevices();
     refreshTokenApi();
     getAddress();
-    Alert.alert('==== Id =====', JSON.stringify(serviceData));
   }, []);
 
 ////////////////// Categorises Api Call Start ////////////////
@@ -228,7 +227,7 @@ const devicesItem = ({ item }) => (
             {currentLocation}
             {flat_no}
           </Text>
-          <Image source={require('../../Icons/downArrow.png')} />
+          <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}} />
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity

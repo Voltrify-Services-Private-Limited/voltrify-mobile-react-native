@@ -88,6 +88,7 @@ const LocationScreen = ({ route }) => {
     console.log('login data', response);
     Alert.alert(JSON.stringify(response));
     setModalVisible(!modalVisible);
+      login(tokens);
   };
 
 //   const locationAddress = () => {
