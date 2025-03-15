@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import GoogleMap from '../../Component/GoogleMap';
 import ModalComponent from '../../Component/AddressModal';
+import { GOOGLE_KEY } from '../../EnvFolder/env';
 // import Geolocation from '@react-native-community/geolocation'; // For location
 // import Geocoding from 'react-native-geocoding'; // For reverse geocoding
 // import { PermissionsAndroid } from 'react-native'; // For requesting location permission on Android
@@ -136,7 +137,7 @@ const LocationScreen = ({ route }) => {
     }
 
     // Initialize Geocoding API with your key
-    Geocoding.init('AIzaSyAnKKIy-Qaickt4GbIJSIfOP6XETaJrz8M');  // Replace with your actual API Key
+    Geocoding.init(GOOGLE_KEY);  // Replace with your actual API Key
   }, []);
 
   // Request location permission on Android

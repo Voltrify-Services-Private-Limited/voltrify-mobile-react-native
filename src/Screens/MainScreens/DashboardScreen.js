@@ -276,25 +276,6 @@ const DashboardScreen = ({ route }) => {
     console.log('login data', response);
   }
 
-  //  useEffect(() => {
-  //     // Ensure API is initialized with a valid key
-  //     Geocoding.init('AIzaSyAnKKIy-Qaickt4GbIJSIfOP6XETaJrz8M');
-
-  //     // Call reverse geocoding
-  //     Geocoding.from(location.latitude, location.longitude)
-  //       .then((json) => {
-  //         if (json.results && json.results.length > 0) {
-  //           const formattedAddress = json.results[0].formatted_address;
-  //           setUserAddress(formattedAddress);
-  //         } else {
-  //           setError('No address found for these coordinates.');
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         setError('Error: ' + err.message);
-  //       });
-  //   }, []);
-
   const filteredServiceData = serviceData.filter((service) =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     service.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -356,7 +337,7 @@ const DashboardScreen = ({ route }) => {
             ) : (
               <>
                 <Text style={styles.headerText_1}>
-                  {currentLocation.length > 80 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                  {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
                 </Text>
               </>
             )}

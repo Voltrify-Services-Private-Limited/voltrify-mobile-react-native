@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import RazorpayCheckout from 'react-native-razorpay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RAZORPAY_KEY } from '../../EnvFolder/env';
 const PaymentScreen = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,7 +23,6 @@ const PaymentScreen = ({ route }) => {
   const [paymentOrderId ,setPaymentOrderId] = useState('')
 
   ////////////// Payment Methods ///////////////
-  const key_id = 'rzp_test_hlMav0jYthWSud';
   const currency = 'INR'; 
   const paymentHandle = async () => {
     const userName = await AsyncStorage.getItem('userName');
@@ -35,7 +35,7 @@ const PaymentScreen = ({ route }) => {
       description: 'Credits towards consultation',
       image: 'https://i.imgur.com/3g7nmJC.png',
       currency: currency,
-      key: key_id,
+      key: RAZORPAY_KEY,
       amount: finalPrice*100,
       name: 'Voltrify',
       prefill: {

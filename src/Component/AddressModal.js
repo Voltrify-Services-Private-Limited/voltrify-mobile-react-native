@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Geocoding from 'react-native-geocoding';
+import { GOOGLE_KEY } from '../EnvFolder/env';
 
 const AddressModal = ({ visible, onClose }) => {
   const [FaltNumber, setFlatNumber] = useState('');
@@ -27,7 +28,7 @@ const AddressModal = ({ visible, onClose }) => {
   useEffect(() => {
     getPhoneNumber();
     // Initialize Google Geocoding API
-    Geocoding.init('AIzaSyAnKKIy-Qaickt4GbIJSIfOP6XETaJrz8M'); // Replace with your API key
+    Geocoding.init(GOOGLE_KEY); // Replace with your API key
   }, []);
   ///////////// Profile Id Start //////////////////
 
