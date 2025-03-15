@@ -76,7 +76,6 @@ const PaymentCard = ({ route }) => {
 
         response = await result.json();
         console.log('order data========', response);
-        Alert.alert(JSON.stringify(response));
     };
 
     ////////////////// Payment Card Api Call Start ////////////////
@@ -184,7 +183,6 @@ const PaymentCard = ({ route }) => {
                 transparent={true}
                 visible={modalVisible}
                 onRequestClose={() => {
-                    Alert.alert('Modal has been closed.');
                     setModalVisible(!modalVisible);
                 }}>
                 <View style={styles.centeredView}>

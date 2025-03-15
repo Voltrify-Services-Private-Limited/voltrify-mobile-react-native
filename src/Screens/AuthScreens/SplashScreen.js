@@ -11,6 +11,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import TextLogo_1 from '../../SvgImage/TextLogo_1';
 
 
 // dimension
@@ -20,14 +21,7 @@ const SplashScreen = ({route}) => {
   return (
     <View style={styles.splash__main}>
       <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
-      <Image
-        source={require('../../Icons/icon_1.png')}
-        style={{
-          height: 100,
-          width: '100%',
-          resizeMode: 'contain',
-        }}
-      />
+      <TextLogo_1 height={100} width={100} />
     </View>
   );
 };

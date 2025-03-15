@@ -1,17 +1,24 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, FlatList, Alert } from 'react-native'
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, FlatList, Alert, RefreshControl, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import Geocoding from 'react-native-geocoding';
+import ModalComponent from '../../Component/AddressModal';
 const DashboardScreen = ({ route }) => {
   const [serviceData, setServiceData] = useState([]);
   const [categoriesData, setCategorise] = useState([]);
   const [devicesData, setDevicesData] = useState([]);
   const [flat_no, setFlatNo] = useState('');
-  const [currentLocation, setCurrentLocation] = useState("");
+  const [currentLocation, setCurrentLocation] = useState('');
+  const [manuallyLocation, setManuallyLocation] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [isRefersh, setIsRefersh] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [manuallyAddress, setManuallyAddress] = useState('false');
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1); // Keep track of the current page
+
   const navigation = useNavigation();
-
-
 
   useEffect(() => {
     getAllService();
@@ -19,14 +26,29 @@ const DashboardScreen = ({ route }) => {
     getAllDevices();
     refreshTokenApi();
     getAddress();
+    Manually_and_enable();
   }, []);
 
-////////////////// Categorises Api Call Start ////////////////
+  const handleRefersh = async () => {
+    setIsRefersh(true);
+
+    Manually_and_enable();
+    // await getAllService();
+    // await getAllCategorise();
+    // await getAllDevices();
+    await refreshTokenApi();
+    //  await getAddress();
+    setIsRefersh(false);
+  }
+
+  ////////////////// Categorises Api Call Start ////////////////
   const getAllCategorise = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
-      const lat_long = await AsyncStorage.getItem("userAddress");
-      setCurrentLocation(lat_long);
+      const latitude = await AsyncStorage.getItem("latitude");
+      setCurrentLocation(JSON.parse(latitude));
+      const manually = await AsyncStorage.getItem("finalAddress");
+      setManuallyLocation(JSON.parse(manually));
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
       const response = await fetch('http://api.voltrify.in/categories', {
         method: 'GET',
@@ -45,7 +67,7 @@ const DashboardScreen = ({ route }) => {
       console.log('Categories Data err --- ', err);
     }
   };
-  
+
   const categoriseItem = ({ item }) => (
     <View style={styles.serviceCard}>
       <TouchableOpacity onPress={() => navigation.navigate('CategoriseDetails', {
@@ -63,57 +85,72 @@ const DashboardScreen = ({ route }) => {
     </View>
   );
 
-////////////////// Categorises Api Call End ////////////////
-////////////////// Services Api Call Start ////////////////
-  const getAllService = async () => {
+  ////////////////// Categorises Api Call End ////////////////
+  ////////////////// Services Api Call Start ////////////////
+  const getAllService = async (page = 1) => {
+    if (loading) return; // Prevent multiple simultaneous requests
+    setLoading(true);
+
     try {
       const userData = await AsyncStorage.getItem('access_token');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
 
-      const response = await fetch('http://api.voltrify.in/service', {
+      const response = await fetch(`http://api.voltrify.in/service?page=${page}&limit=10`, { // Add pagination params
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json', // Optional, depending on your API requirements
+          'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const resData = await response.json();
-      setServiceData(resData.data);
+      setServiceData((prevData) => [...prevData, ...resData.data]); // Append new data
     } catch (err) {
       console.log('Service Data err --- ', err);
+    } finally {
+      setLoading(false);
     }
   };
+
+
+  const navigateOther = async (id) => {
+    navigation.navigate('SummaryScreen',);
+    // Alert.alert(JSON.stringify(price));
+    await AsyncStorage.setItem('serviceId', id);
+  }
+
 
   const serviceItem = ({ item }) => (
     <View style={styles.sliderCard}>
       <TouchableOpacity
         style={styles.cardBox}
-        onPress={() => navigation.navigate('ServiceDetails', {
-          service_id: item.id,
-          deviceId: item.deviceId,
-          service_description: item.description,
-        })}>
+        onPress={() => { createCart(item.id), navigateOther(item.id) }}>
         <Image
-          source={require('../../Icons/image1.png')}
+          source={
+            item.deviceImage?.length > 0
+              ? { uri: item.deviceImage[0] }
+              : require('../../Icons/serviceImage.png')
+          }
           style={{ width: '100%', borderRadius: 10, height: '100' }}
         />
         <Text style={styles.cardNameText}>
           {item.name}
         </Text>
         <Text style={styles.cardText2}>
-          {item.description}
+          {/* {item.description} */}
+          {item.description.length > 80 ? `${item.description.substring(0, 50)}...` : item.description}
         </Text>
-        <View style={{ flexDirection: 'row' }}>
+        {/* <View style={{ flexDirection: 'row' }}>
           <Image source={require('../../Icons/starfill.png')} />
           <Image source={require('../../Icons/starfill.png')} />
           <Image source={require('../../Icons/starfill.png')} />
           <Image source={require('../../Icons/starfill.png')} />
           <Image source={require('../../Icons/starfill.png')} />
-        </View>
+        </View> */}
         <View
           style={{
             flexDirection: 'row',
@@ -127,54 +164,54 @@ const DashboardScreen = ({ route }) => {
     </View>
   );
 
-////////////////// Services Api Call End ////////////////
-////////////////// Devices Api Call Start ////////////////
-const getAllDevices = async () => {
-  try {
-    const userData = await AsyncStorage.getItem('access_token');
-    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+  ////////////////// Services Api Call End ////////////////
+  ////////////////// Devices Api Call Start ////////////////
+  const getAllDevices = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('access_token');
+      const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
 
-    const response = await fetch('http://api.voltrify.in/devices', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json', // Optional, depending on your API requirements
-      },
-    });
+      const response = await fetch('http://api.voltrify.in/devices', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json', // Optional, depending on your API requirements
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const resData = await response.json();
+      setDevicesData(resData.data);
+    } catch (err) {
+      console.log('Service Data err --- ', err);
     }
-    const resData = await response.json();
-    setDevicesData(resData.data);
-  } catch (err) {
-    console.log('Service Data err --- ', err);
-  }
-};
+  };
 
-const devicesItem = ({ item }) => (
-  <View style={styles.sliderCard}>
-    <TouchableOpacity
-      style={styles.cardBox}
-      onPress={() => navigation.navigate('ServiceDetails', {
-        deviceId: item.id,
-        service_description: item.description,
-      })}>
-      <Image
-        source={require('../../Icons/image1.png')}
-        style={{ width: '100%', borderRadius: 10, height: '100' }}
-      />
-      <Text style={styles.cardNameText}>
-        {item.name}
-      </Text>
-      <Text style={styles.cardText2}>
-        {item.description}
-      </Text>
-    </TouchableOpacity>
-  </View>
-);
+  const devicesItem = ({ item }) => (
+    <View style={styles.sliderCard}>
+      <TouchableOpacity
+        style={styles.cardBox}
+        onPress={() => navigation.navigate('ServiceDetails', {
+          deviceId: item.id,
+          service_description: item.description,
+        })}>
+        <Image
+          source={{ uri: item.images[0] }}
+          style={{ width: '100%', borderRadius: 10, height: '100' }}
+        />
+        <Text style={styles.cardNameText}>
+          {item.name}
+        </Text>
+        {/* <Text style={styles.cardText2}>
+          {item.description}
+        </Text> */}
+      </TouchableOpacity>
+    </View>
+  );
 
-////////////////// Services Api Call End ////////////////
+  ////////////////// Services Api Call End ////////////////
 
   ////////////// Refersh Token Api Call Start ///////////////
 
@@ -188,7 +225,7 @@ const devicesItem = ({ item }) => (
     result = await fetch(url, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json', // Optional, depending on your API requirements
       },
       body: JSON.stringify({
@@ -201,9 +238,9 @@ const devicesItem = ({ item }) => (
     await AsyncStorage.setItem('access_token', JSON.stringify(response.data.accessToken));
     // Alert.alert(JSON.stringify(response.data.accessToken));
   };
-////////////// Refersh Token Api Call End ///////////////
+  ////////////// Refersh Token Api Call End ///////////////
 
-////////////// Get Address Start ///////////////
+  ////////////// Get Address Start ///////////////
 
   const getAddress = async () => {
     const getAdd_1 = await AsyncStorage.getItem("address1");
@@ -215,26 +252,108 @@ const devicesItem = ({ item }) => (
     setFlatNo(getAdd_1 + getAdd_2 + getLandmark + getCity + getState + getPincode);
   }
 
-////////////// Get Address Start ///////////////
+  ////////////// Get Address Start ///////////////
+
+  ////////////// Create Cart Start ///////////////
+
+  const createCart = async (id) => {
+    const userData = await AsyncStorage.getItem('access_token');
+    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    const user_id = await AsyncStorage.getItem('userId');
+    await AsyncStorage.setItem("serviceId", id);
+    result = await fetch('http://api.voltrify.in/user/cart', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', // Optional, depending on your API requirements
+      },
+      body: JSON.stringify({
+        service_id: id,
+        user_id: user_id,
+      }),
+    });
+    response = await result.json();
+    console.log('login data', response);
+  }
+
+  const filteredServiceData = serviceData.filter((service) =>
+    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    service.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredCategoriesData = categoriesData.filter((category) =>
+    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredDevicesData = devicesData.filter((device) =>
+    device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    device.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const Manually_and_enable = async () => {
+    const manuallyAddress_Key = await AsyncStorage.getItem("manuallyAddress");
+    setManuallyAddress(manuallyAddress_Key);
+
+    // Check if manuallyAddress is set to true, and accordingly handle locations.
+    if (manuallyAddress_Key === 'true') {
+      const manually = await AsyncStorage.getItem("finalAddress");
+      setManuallyLocation(JSON.parse(manually));
+      setCurrentLocation(''); // Clear currentLocation if manuallyLocation is being used
+    } else {
+      const latitude = await AsyncStorage.getItem("latitude");
+      setCurrentLocation(JSON.parse(latitude));
+      setManuallyLocation(''); // Clear manuallyLocation if currentLocation is being used
+    }
+  };
+
+  const updateManaullyAddress = async () => {
+    setModalVisible(!modalVisible);
+    await AsyncStorage.removeItem('conriamLocation');
+    const manuallyAddress = 'true';
+    await AsyncStorage.setItem("manuallyAddress", manuallyAddress);
+    const manually = await AsyncStorage.getItem("finalAddress");
+    setManuallyLocation(JSON.parse(manually));
+  }
+  const updateManaullyTrue = async () => {
+    const manually = await AsyncStorage.getItem("finalAddress");
+    setManuallyLocation(JSON.parse(manually));
+    setModalVisible(true);
+    const confiram = await AsyncStorage.getItem("conriamLocation");
+    console.log(confiram);
+  }
 
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
         <View style={styles.headerLeft}>
-          <Image source={require('../../Icons/locationIcon.png')} />
-          <Text style={styles.headerText_1}>
-
-            {currentLocation}
-            {flat_no}
-          </Text>
-          <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}} />
+          <View style={{ justifyContent: 'center' }}>
+            <Image source={require('../../Icons/locationIcon.png')} />
+          </View>
+          <View style={{ justifyContent: 'center' }}>
+            {manuallyAddress == 'true' ? (
+              <>
+                <Text style={styles.headerText_1}>
+                  {manuallyLocation}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.headerText_1}>
+                  {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                </Text>
+              </>
+            )}
+          </View>
+          <TouchableOpacity onPress={() => updateManaullyTrue()} style={{ justifyContent: 'center' }}>
+            <View style={{ justifyContent: 'center' }}>
+              <Image source={require('../../Icons/downArrow.png')} style={{ width: 12, height: 12 }} />
+            </View>
+          </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.iconButton}
-            onPress={() => props.navigation.navigate('NotificationScreen')}>
+            onPress={() => navigation.navigate('NotificationScreen')}>
             <Image source={require('../../Icons/well.png')} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
             onPress={() => navigation.navigate('YourCart')}
             style={styles.iconButton}>
@@ -242,64 +361,89 @@ const devicesItem = ({ item }) => (
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Search Bar */}
       <View style={styles.searchBar}>
-        <Image
-          source={require('../../Icons/searchIcon.png')}
-          style={{ marginVertical: 10 }}
-        />
+        <Image source={require('../../Icons/searchIcon.png')} style={{ marginVertical: 10 }} />
         <TextInput
           placeholder="Search"
           placeholderTextColor="#00000066"
           style={styles.searchInput}
+          value={searchQuery} // Bind the search query
+          onChangeText={(text) => setSearchQuery(text)} // Update the query state
         />
       </View>
-      <ScrollView>
+
+      <ScrollView showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefersh} onRefresh={handleRefersh} />}
+      >
         <View style={styles.banner}>
           <Image
             source={require('../../Icons/banner.png')}
             style={{ width: '100%', borderRadius: 10 }}
           />
         </View>
-        <View>
-          <Text style={styles.heading1}>Most Used Service</Text>
-          <Text style={styles.text_1}>Find the right services for you!</Text>
+
+        {/* Filtered Categories */}
+        <View style={{ marginVertical: 5, }}>
+          <Text style={styles.heading1}>Most Used Categories</Text>
+          <Text style={styles.text_1}>Find the right categories for you!</Text>
         </View>
-        <View style={styles.serviceView}>
+        <View style={{ height: 'auto', }}>
           <FlatList
             key={'#'}
-            data={categoriesData}
+            data={filteredCategoriesData} // Use filtered categories
             numColumns={2}
             renderItem={categoriseItem}
             keyExtractor={(item) => '#' + item.id.toString()}
           />
         </View>
 
-        <View>
+        {/* Filtered Services */}
+        <View style={{ marginVertical: 5 }}>
           <Text style={styles.heading1}>Most Booked Services</Text>
           <Text style={styles.text_1}>Book the right services for you!</Text>
+        </View>
+        <View style={styles.sliderList}>
+          {/* <FlatList
+            horizontal={true}
+            data={filteredServiceData} // Use filtered services
+            renderItem={serviceItem}
+            keyExtractor={(item) => item.id.toString()}
+          /> */}
+          <FlatList
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            data={filteredServiceData} // Use filtered services
+            renderItem={serviceItem}
+            keyExtractor={(item) => item.id.toString()}
+            onEndReached={() => {
+              if (!loading) {
+                setPage(prevPage => prevPage + 1); // Increment page number when the end is reached
+                getAllService(page + 1); // Fetch the next page
+              }
+            }}
+            onEndReachedThreshold={0.5} // Trigger when the list is 50% from the end
+            ListFooterComponent={loading ? (<View style={{ justifyContent: 'center', marginVertical: 40, alignItems: 'center' }}><ActivityIndicator size="large" color="#FB923C" /></View>) : (null)} // Show loader at the bottom
+          />
 
-          <View style={styles.sliderList}>
-            <FlatList
-              horizontal={true}
-              data={serviceData}
-              renderItem={serviceItem}
-              keyExtractor={(item) => item.id.toString()}
-            />
-          </View>
-        </View>  
-          <View>
+        </View>
+
+        {/* Filtered Devices */}
+        <View style={{ marginVertical: 5, }}>
           <Text style={styles.heading1}>Most Devices</Text>
           <Text style={styles.text_1}>Book the Devices for you!</Text>
-
-          <View style={styles.sliderList}>
-            <FlatList
-              horizontal={true}
-              data={devicesData}
-              renderItem={devicesItem}
-              keyExtractor={(item) => item.id.toString()}
-            />
-          </View>
         </View>
+        <View style={styles.sliderList}>
+          <FlatList
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            data={filteredDevicesData} // Use filtered devices
+            renderItem={devicesItem}
+            keyExtractor={(item) => item.id.toString()}
+          />
+        </View>
+        <ModalComponent visible={modalVisible} onClose={() => updateManaullyAddress()} />
       </ScrollView>
     </View>
   );
@@ -321,13 +465,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerText_1: {
-    fontSize: 8,
+    width: '100%',
+    fontSize: 9,
     fontWeight: 500,
     lineHeight: 9.6,
     color: '#000000B2',
     marginHorizontal: 5,
-    marginTop: 1,
-    letterSpacing: 1,
+    marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',
@@ -350,6 +494,7 @@ const styles = StyleSheet.create({
     borderColor: '#FB923C',
     flexDirection: 'row',
     paddingHorizontal: 10,
+    marginBottom:10,
   },
   searchInput: {
     fontSize: 12,
@@ -396,6 +541,7 @@ const styles = StyleSheet.create({
   },
   sliderList: {
     marginVertical: 5,
+    height: 200,
   },
   sliderCard: {
     flexDirection: 'row',

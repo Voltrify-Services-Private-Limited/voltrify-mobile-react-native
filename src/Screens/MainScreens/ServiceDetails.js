@@ -7,19 +7,42 @@ import {
   TouchableOpacity,
   Modal,
   Alert,
+  FlatList,
+  ScrollView,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceType } from '../../Component/utils';
+
+
+const dataService = [
+  { id: 1, city: 'gwalior', typeService: 'REPAIR', imageUrl: require('../../Icons/repair.png'), },
+  { id: 2, city: 'gwalior', typeService: 'MAINTENANCE', imageUrl: require('../../Icons/maintenance.jpg'), },
+  { id: 3, city: 'gwalior', typeService: 'UPGRADE', imageUrl: require('../../Icons/upgrade.png'), },
+]
+
 
 const ServiceDetails = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [data, setData] = useState([]);
+  const [serviceType, setServiceType] = useState([]);
   const { service_id } = route.params;
   const { service_description } = route.params;
-  const { deviceId} = route.params;
+  const { deviceId } = route.params;
+  // const [typeList, setTypeList] = useState(ServiceType);
+  const [type, setType] = useState("");
+  const [city, setCity] = useState("");
+
+  // Function to handle text press
+  const handlePressDay = async (typeService) => {
+    setType(typeService);
+    getAllService(typeService);
+    console.log(typeService);
+  };
+
 
   const addCartBtn = () => {
     setModalVisible(!modalVisible);
@@ -28,17 +51,14 @@ const ServiceDetails = ({ route }) => {
 
   useEffect(() => {
     getAllService();
-    console.log('Service Id', service_id);
+
   }, []);
 
-  const getAllService = async () => {
+  const getAllService = async (typeService) => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
-      await AsyncStorage.setItem("service_description",service_description);
-      await AsyncStorage.setItem("deviceId", deviceId);
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-
-      const response = await fetch(`http://api.voltrify.in/service/${service_id}`, {
+      const response = await fetch(`http://api.voltrify.in/service/${deviceId}?city=gwalior&type=${typeService}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -51,16 +71,42 @@ const ServiceDetails = ({ route }) => {
       }
       const resData = await response.json();
       setData(resData.data);
+      console.log(resData.data);
+      await AsyncStorage.setItem('deviceId', deviceId);
     } catch (err) {
-      console.log('get Service err --- ', err);
+      console.log('get Device err --- ', err);
     }
   };
 
-  const createCart = async () => {
+  const createCart = async (id) => {
+    const userData = await AsyncStorage.getItem('access_token');
+    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    const user_id = await AsyncStorage.getItem('userId');
+    console.log("adsssdd", token);
+    result = await fetch('http://api.voltrify.in/user/cart', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', // Optional, depending on your API requirements
+      },
+      body: JSON.stringify({
+        service_id: id,
+        user_id: user_id,
+      }),
+
+    });
+    // setData(data.filter(item => item.id !== id));
+    response = await result.json();
+    console.log('create Order', response);
+    navigation.navigate("SummaryScreen");
+  }
+
+  const serviceAddBtn = async (id) => {
     const userData = await AsyncStorage.getItem('access_token');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
     const user_id = await AsyncStorage.getItem('userId');
     const url = 'http://api.voltrify.in/user/cart';
+    console.log("adsssdd", id);
     result = await fetch(url, {
       method: 'POST',
       headers: {
@@ -68,21 +114,64 @@ const ServiceDetails = ({ route }) => {
         'Content-Type': 'application/json', // Optional, depending on your API requirements
       },
       body: JSON.stringify({
-        service_id: service_id,
+        service_id: id,
         user_id: user_id,
       }),
-    });
 
+    });
+    setData(data.filter(item => item.id !== id));
     response = await result.json();
     console.log('login data', response);
-    Alert.alert(JSON.stringify(response));
-  }
-
-  const serviceCardAdd = () => {
-    createCart();
     navigation.navigate("SummaryScreen");
   }
 
+  const navigateOther = async (id) => {
+    navigation.navigate('SummaryScreen');
+    await AsyncStorage.setItem('serviceId', id);
+  }
+
+  const deviceIdItem = ({ item }) => (
+    <View style={styles.listCard}>
+      <View
+        style={{
+          flexDirection: 'row',
+          borderBottomWidth: 0.2,
+          borderStyle: 'dashed',
+          marginHorizontal: 1,
+          justifyContent: 'space-between',
+          width: 'auto',
+          paddingBottom: 5,
+        }}>
+        <View>
+          <Text style={styles.contentText4}>{item.name}</Text>
+          <Text style={styles.contentText6} >{item.description.length > 15 ? `${item.description.substring(0, 15)}...` : item.description}</Text>
+          <Text style={styles.contentText5}>Starts at ₹{item.price}</Text>
+        </View>
+        <View style={{ marginHorizontal: 5 }}>
+          <Image source={
+            item.deviceImage?.length > 0
+              ? { uri: item.deviceImage[0] }
+              : require('../../Icons/serviceImage.png')
+          }
+            style={{ width: 50, borderRadius: 5, height: 50, }} />
+          <TouchableOpacity style={styles.addBtn} onPress={() => { createCart(item.id), navigateOther(item.id) }}>
+            <Text style={styles.addBtnText}>Book</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handlePressDay(item.typeService)}>
+      <View style={{ marginHorizontal: 5, justifyContent: 'center', alignItems: 'center', width: 80, height: 80, backgroundColor: '#fff', elevation: 4, padding: 5, borderRadius: 10, marginVertical: 10, }}>
+        <Image source={item.imageUrl}
+          style={{ width: 60, borderRadius: 10, height: 60 }} />
+        <Text style={styles.cardText}>{item.typeService}</Text>
+      </View>
+    </TouchableOpacity>
+  );
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
@@ -91,10 +180,10 @@ const ServiceDetails = ({ route }) => {
           onPress={() => navigation.goBack()}>
           <Image source={require('../../Icons/leftArrow.png')} />
         </TouchableOpacity>
-        <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+        {/* <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
           <TouchableOpacity
             style={styles.backButton2}
-            onPress={() => props.navigation.navigate('ServiceSearch')}>
+            onPress={() => navigation.navigate('ServiceSearch')}>
             <Image source={require('../../Icons/searchIcon2.png')} />
           </TouchableOpacity>
           <TouchableOpacity
@@ -102,7 +191,7 @@ const ServiceDetails = ({ route }) => {
             onPress={() => props.navigation.goBack()}>
             <Image source={require('../../Icons/shareIcon.png')} />
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
 
       <View style={styles.banner}>
@@ -116,413 +205,215 @@ const ServiceDetails = ({ route }) => {
           }}
         />
       </View>
-      <View style={styles.serviceContent}>
-        {/* ================= Add Service Modal Start========= */}
-        <Modal
-          animationType="none"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            Alert.alert('Modal has been closed.');
-            setModalVisible(!modalVisible);
-          }}>
-          <View style={styles.centeredViewModal}>
-            <View style={styles.modalViewModal}>
-              <TouchableOpacity
-                onPress={() => setModalVisible(!modalVisible)}
-                style={{
-                  width: '100%',
-                  height: 48,
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                }}>
-                <View
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.serviceContent}>
+          {/* ================= Add Service Modal Start========= */}
+          <Modal
+            animationType="none"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              setModalVisible(!modalVisible);
+            }}>
+            <View style={styles.centeredViewModal}>
+              <View style={styles.modalViewModal}>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(!modalVisible)}
                   style={{
-                    width: 32,
-                    height: 4,
-                    borderRadius: 8,
-                    backgroundColor: '#79747E',
-                    alignSelf: 'center',
-                  }}></View>
-              </TouchableOpacity>
-              <View style={{
-                marginBottom: 10,
-                borderBottomWidth: 0.2,
-                borderBottomColor: '#A09CAB',
-                height: 50,
-              }}>
+                    width: '100%',
+                    height: 48,
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                  }}>
+                  <View
+                    style={{
+                      width: 32,
+                      height: 4,
+                      borderRadius: 8,
+                      backgroundColor: '#79747E',
+                      alignSelf: 'center',
+                    }}></View>
+                </TouchableOpacity>
+                <View style={{
+                  marginBottom: 10,
+                  borderBottomWidth: 0.2,
+                  borderBottomColor: '#A09CAB',
+                  height: 50,
+                }}>
+                  <View>
+                    <Text style={styles.contentText4}>Power saver AC service</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImg}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImg}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImg}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImg}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImg}
+                      />
+                      <Text style={styles.contentText2}>329 Reviews</Text>
+                    </View>
+                    <Text style={styles.contentText6}>
+                      ₹100 Off on your first service
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: "row" }}>
+                  <View style={styles.modalCard}>
+                    <Text style={styles.modalHeading}>Split AC</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Text style={styles.modalReviewText}>329 Reviews</Text>
+                    </View>
+
+                    <Text style={styles.modalPriceText}>₹499</Text>
+                    <TouchableOpacity style={styles.addBtnModal} onPress={() => setIsVisible(!isVisible)}>
+                      <Text style={styles.addBtnTextModal}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.modalCard}>
+                    <Text style={styles.modalHeading}>Split AC</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Image
+                        source={require('../../Icons/starfill.png')}
+                        style={styles.starImgModal}
+                      />
+                      <Text style={styles.modalReviewText}>329 Reviews</Text>
+                    </View>
+
+                    <Text style={styles.modalPriceText}>₹499</Text>
+                    <TouchableOpacity style={styles.addBtnModal}>
+                      <Text style={styles.addBtnTextModal}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
                 <View>
-                  <Text style={styles.contentText4}>Power saver AC service</Text>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImg}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImg}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImg}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImg}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImg}
-                    />
-                    <Text style={styles.contentText2}>329 Reviews</Text>
+                  <Text style={{
+                    color: '#1C1B1F',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    lineHeight: 40,
+                  }}>About the service</Text>
+                  <View style={{ flexDirection: 'row', marginVertical: 2, }}>
+                    <Image source={require("../../Icons/circleCheck.png")} />
+                    <Text style={{
+                      fontSize: 12,
+                      fontWeight: 400,
+                      marginTop: 2,
+                      color: '#1C1B1F',
+                    }}>Advance Foam Cleaning</Text>
                   </View>
-                  <Text style={styles.contentText6}>
-                    ₹100 Off on your first service
-                  </Text>
+                  <View style={{ flexDirection: 'row', marginVertical: 2, }}>
+                    <Image source={require("../../Icons/circleCheck.png")} />
+                    <Text style={{
+                      fontSize: 12,
+                      fontWeight: 400,
+                      marginTop: 2,
+                      color: '#1C1B1F',
+                    }}>Cleaning of outdoor unit</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', marginVertical: 2, }}>
+                    <Image source={require("../../Icons/circleCheck.png")} />
+                    <Text style={{
+                      fontSize: 12,
+                      fontWeight: 400,
+                      marginTop: 2,
+                      color: '#1C1B1F',
+                    }}>Final check & cleanup</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={{ flexDirection: "row" }}>
-                <View style={styles.modalCard}>
-                  <Text style={styles.modalHeading}>Split AC</Text>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Text style={styles.modalReviewText}>329 Reviews</Text>
-                  </View>
 
-                  <Text style={styles.modalPriceText}>₹499</Text>
-                  <TouchableOpacity style={styles.addBtnModal} onPress={() => setIsVisible(!isVisible)}>
-                    <Text style={styles.addBtnTextModal}>Add</Text>
+                {isVisible ? <View style={{ flexDirection: "row", justifyContent: "space-between", width: '100%', height: 40, marginTop: 20 }}>
+                  <View style={{ justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 16, fontWeight: 700, lineHeight: 24 }}>₹499</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => addCartBtn()} style={{ width: 164, height: 40, borderRadius: 10, borderWidth: 1, justifyContent: 'center', borderColor: '#FB923C' }}>
+                    <Text style={{ fontSize: 16, fontWeight: 700, lineHeight: 24, textAlign: 'center' }}>Done</Text>
                   </TouchableOpacity>
-                </View>
-                <View style={styles.modalCard}>
-                  <Text style={styles.modalHeading}>Split AC</Text>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Image
-                      source={require('../../Icons/starfill.png')}
-                      style={styles.starImgModal}
-                    />
-                    <Text style={styles.modalReviewText}>329 Reviews</Text>
-                  </View>
+                </View> : <View></View>
+                }
 
-                  <Text style={styles.modalPriceText}>₹499</Text>
-                  <TouchableOpacity style={styles.addBtnModal}>
-                    <Text style={styles.addBtnTextModal}>Add</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View>
-                <Text style={{
-                  color: '#1C1B1F',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  lineHeight: 40,
-                }}>About the service</Text>
-                <View style={{ flexDirection: 'row', marginVertical: 2, }}>
-                  <Image source={require("../../Icons/circleCheck.png")} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: 400,
-                    marginTop: 2,
-                    color: '#1C1B1F',
-                  }}>Advance Foam Cleaning</Text>
-                </View>
-                <View style={{ flexDirection: 'row', marginVertical: 2, }}>
-                  <Image source={require("../../Icons/circleCheck.png")} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: 400,
-                    marginTop: 2,
-                    color: '#1C1B1F',
-                  }}>Cleaning of outdoor unit</Text>
-                </View>
-                <View style={{ flexDirection: 'row', marginVertical: 2, }}>
-                  <Image source={require("../../Icons/circleCheck.png")} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: 400,
-                    marginTop: 2,
-                    color: '#1C1B1F',
-                  }}>Final check & cleanup</Text>
-                </View>
-              </View>
-
-              {isVisible ? <View style={{ flexDirection: "row", justifyContent: "space-between", width: '100%', height: 40, marginTop: 20 }}>
-                <View style={{ justifyContent: 'center' }}>
-                  <Text style={{ fontSize: 16, fontWeight: 700, lineHeight: 24 }}>₹499</Text>
-                </View>
-                <TouchableOpacity onPress={() => addCartBtn()} style={{ width: 164, height: 40, borderRadius: 10, borderWidth: 1, justifyContent: 'center', borderColor: '#FB923C' }}>
-                  <Text style={{ fontSize: 16, fontWeight: 700, lineHeight: 24, textAlign: 'center' }}>Done</Text>
-                </TouchableOpacity>
-              </View> : <View></View>
-              }
-
-            </View>
-          </View>
-        </Modal>
-        {/* ================= Add Service Modal End========= */}
-        <View style={styles.content}>
-          {data.map(item => (
-            <View key={item.type}>
-              <Text style={styles.contentText1}>{item.type}</Text>
-            </View>
-          ))}
-          <View style={{ flexDirection: 'row' }}>
-            <Image
-              source={require('../../Icons/starfill.png')}
-              style={styles.starImg}
-            />
-            <Image
-              source={require('../../Icons/starfill.png')}
-              style={styles.starImg}
-            />
-            <Image
-              source={require('../../Icons/starfill.png')}
-              style={styles.starImg}
-            />
-            <Image
-              source={require('../../Icons/starfill.png')}
-              style={styles.starImg}
-            />
-            <Image
-              source={require('../../Icons/starfill.png')}
-              style={styles.starImg}
-            />
-            <Text style={styles.contentText2}>329 Reviews</Text>
-          </View>
-
-          <View style={styles.cardBox}>
-          <TouchableOpacity onPress={() => serviceCardAdd()}>
-          <View style={styles.card}>
-              <Image source={require('../../Icons/serviceImage.png')} />
-              <Text style={styles.cardText}>Service</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => serviceCardAdd()}>
-          <View style={styles.card}>
-              <Image source={require('../../Icons/serviceImage.png')} />
-              <Text style={styles.cardText}>Service</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => serviceCardAdd()}>
-          <View style={styles.card}>
-              <Image source={require('../../Icons/serviceImage.png')} />
-              <Text style={styles.cardText}>Service</Text>
-            </View>
-          </TouchableOpacity>
-          </View>
-
-          <View style={styles.serviceBox}>
-            {data.map(item => (
-              <View key={item.type}>
-                <Text style={styles.contentText3}>{item.name}</Text>
-              </View>
-            ))}
-          </View>
-          <View style={styles.listCard}>
-            <View
-              style={{
-                flexDirection: 'row',
-                borderBottomWidth: 0.2,
-                borderStyle: 'dashed',
-                marginHorizontal: 1,
-                justifyContent: 'space-between',
-                width: 'auto',
-                paddingBottom: 5,
-              }}>
-              <View>
-                <Text style={styles.contentText4}>Power saver AC service</Text>
-                <View style={{ flexDirection: 'row' }}>
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Text style={styles.contentText2}>329 Reviews</Text>
-                </View>
-                <Text style={styles.contentText5}>Starts at ₹499</Text>
-                <Text style={styles.contentText6}>
-                  ₹100 Off on your first service
-                </Text>
-              </View>
-              <View style={{ marginHorizontal: 5 }}>
-                <Image source={require('../../Icons/serviceImage2.png')} />
-                <TouchableOpacity style={styles.addBtn} onPress={() => createCart()}>
-                  <Text style={styles.addBtnText}>Add</Text>
-                </TouchableOpacity>
               </View>
             </View>
-
-            <Text style={[styles.contentText5, { fontWeight: 400 }]}>
-              Cleaning of indoor unit with foam-spray
-            </Text>
-            <Text style={[styles.contentText6, { color: '#FB923C' }]}>
-              View Details
-            </Text>
-          </View>
-          <View style={styles.listCard}>
-            <View
-              style={{
-                flexDirection: 'row',
-                borderBottomWidth: 0.2,
-                borderStyle: 'dashed',
-                marginHorizontal: 1,
-                justifyContent: 'space-between',
-                width: 'auto',
-                paddingBottom: 5,
-              }}>
-              <View>
-                <Text style={styles.contentText4}>Power saver AC service</Text>
-                <View style={{ flexDirection: 'row' }}>
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Text style={styles.contentText2}>329 Reviews</Text>
-                </View>
-                <Text style={styles.contentText5}>Starts at ₹499</Text>
-                <Text style={styles.contentText6}>
-                  ₹100 Off on your first service
-                </Text>
-              </View>
-              <View style={{ marginHorizontal: 5 }}>
-                <Image source={require('../../Icons/serviceImage2.png')} />
-                <TouchableOpacity style={styles.addBtn} onPress={() => createCart()}>
-                  <Text style={styles.addBtnText}>Add</Text>
-                </TouchableOpacity>
-              </View>
+          </Modal>
+          {/* ================= Add Service Modal End========= */}
+          <View style={styles.content}>
+            <Text style={styles.contentText1}>{type}</Text>
+            <View style={styles.cardBox}>
+              <FlatList
+                data={dataService}
+                horizontal={true}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+              />
             </View>
 
-            <Text style={[styles.contentText5, { fontWeight: 400 }]}>
-              Cleaning of indoor unit with foam-spray
-            </Text>
-            <Text style={[styles.contentText6, { color: '#FB923C' }]}>
-              View Details
-            </Text>
-          </View>
-          <View style={styles.listCard}>
-            <View
-              style={{
-                flexDirection: 'row',
-                borderBottomWidth: 0.2,
-                borderStyle: 'dashed',
-                marginHorizontal: 1,
-                justifyContent: 'space-between',
-                width: 'auto',
-                paddingBottom: 5,
-              }}>
-              <View>
-                <Text style={styles.contentText4}>Power saver AC service</Text>
-                <View style={{ flexDirection: 'row' }}>
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Image
-                    source={require('../../Icons/starfill.png')}
-                    style={styles.starImg}
-                  />
-                  <Text style={styles.contentText2}>329 Reviews</Text>
+            {/* <View style={styles.serviceBox}>
+              {data.length > 0 && (
+                <View key={data[0].type}>
+                  <Text style={styles.contentText1}>{data[0].name}</Text>
                 </View>
-                <Text style={styles.contentText5}>Starts at ₹499</Text>
-                <Text style={styles.contentText6}>
-                  ₹100 Off on your first service
-                </Text>
-              </View>
-              <View style={{ marginHorizontal: 5 }}>
-                <Image source={require('../../Icons/serviceImage2.png')} />
-                <TouchableOpacity style={styles.addBtn} onPress={() => createCart()}>
-                  <Text style={styles.addBtnText}>Add</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+              )}
+            </View> */}
 
-            <Text style={[styles.contentText5, { fontWeight: 400 }]}>
-              Cleaning of indoor unit with foam-spray
-            </Text>
-            <Text style={[styles.contentText6, { color: '#FB923C' }]}>
-              View Details
-            </Text>
+            <View style={{ marginBottom: 200 }}>
+              <FlatList
+                data={data}
+                renderItem={deviceIdItem}
+                keyExtractor={(item) => item.id.toString()}
+              />
+
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -539,7 +430,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginHorizontal: 15,
-    zIndex: 1,
+    zIndex: 6,
   },
   backButton: {
     width: 32,
@@ -554,6 +445,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: '100%',
     height: 200,
+    zIndex: 4,
   },
   backButton2: {
     width: 32,
@@ -588,16 +480,16 @@ const styles = StyleSheet.create({
   },
   cardBox: {
     width: 'auto',
-    height: 95,
+    height: 'auto',
     backgroundColor: '#F7F7F7',
-    paddingVertical: 5,
-    justifyContent: 'space-evenly',
-    flexDirection: 'row',
+    paddingVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginVertical: 5,
   },
   cardText: {
     fontSize: 8,
-    fontWeight: 400,
+    fontWeight: 500,
     textAlign: 'center',
     color: '#1C1B1F',
   },
@@ -625,15 +517,15 @@ const styles = StyleSheet.create({
     color: '#1C1B1F',
   },
   contentText5: {
-    fontSize: 6,
+    fontSize: 10,
     fontWeight: 700,
-    color: '#000000',
+    color: '#FB923C',
     marginTop: 5,
   },
   contentText6: {
-    fontSize: 6,
+    fontSize: 12,
     fontWeight: 400,
-    color: '#4ADE80',
+    color: '#000',
   },
   addBtn: {
     width: 30,

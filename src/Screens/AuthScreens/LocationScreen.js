@@ -9,16 +9,26 @@ import {
   TextInput,
   Alert,
   ScrollView,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { AuthContext } from '../../Component/AuthContext';
 import Geocoding from 'react-native-geocoding';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import GoogleMap from '../../Component/GoogleMap';
+import ModalComponent from '../../Component/AddressModal';
+import { GOOGLE_KEY } from '../../EnvFolder/env';
+// import Geolocation from '@react-native-community/geolocation'; // For location
+// import Geocoding from 'react-native-geocoding'; // For reverse geocoding
+// import { PermissionsAndroid } from 'react-native'; // For requesting location permission on Android
+
 const LocationScreen = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
+  const [locationModal, setLocationModal] = useState(false);
   const [addressLine2, setAddressLine2] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [landmark, setLandmark] = useState('');
@@ -28,6 +38,7 @@ const LocationScreen = ({ route }) => {
   const [pincode, setPincode] = useState('');
   const [city, setCity] = useState('');
   const [phone, setPhone] = useState('');
+  const [user, setUser] = useState([]);
   const [location, setLocation] = useState({
     latitude: null,
     longitude: null,
@@ -37,21 +48,50 @@ const LocationScreen = ({ route }) => {
   const [UserAddress, setUserAddress] = useState('');
   const { login } = React.useContext(AuthContext);
   const { tokens } = route.params;
-  const { id } = route.params;
 
   console.log(location, UserAddress);
   console.log('adresss---------------', UserAddress);
 
   useEffect(() => {
-    console.log(id);
-    setUserId();
+    getProfile_id();
   }, []);
 
 
   const setUserId = async () => {
-    await AsyncStorage.setItem("userId", id);
-    await AsyncStorage.setItem("userAddress", UserAddress);
+    await AsyncStorage.setItem("userId", user);
   }
+
+  ///////////// Profile Id Start //////////////////
+
+  const getProfile_id = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('access_token');
+      const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+      const response = await fetch('http://api.voltrify.in/user', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json', // Optional, depending on your API requirements
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const resData = await response.json();
+      setUser(resData.data.id);
+      await AsyncStorage.setItem('userName', resData.data.firstName);
+      await AsyncStorage.setItem('userNumber', resData.data.phoneNumber);
+      await AsyncStorage.setItem('userEmail', resData.data.email);
+
+    } catch (err) {
+      console.log('get profile err --- ', err);
+    }
+  };
+
+
+  ///////////// Profile Id End //////////////////
 
   const UserLoginApi = async () => {
     const userData = await AsyncStorage.getItem('access_token');
@@ -64,7 +104,7 @@ const LocationScreen = ({ route }) => {
         'Content-Type': 'application/json', // Optional, depending on your API requirements
       },
       body: JSON.stringify({
-        user_id: id,
+        user_id: user,
         firstName: firstName,
         lastName: lastName,
         city: city,
@@ -83,39 +123,63 @@ const LocationScreen = ({ route }) => {
     await AsyncStorage.setItem("city", city);
     await AsyncStorage.setItem("state", state);
     await AsyncStorage.setItem("pincode", pincode);
-
     response = await result.json();
     console.log('login data', response);
-    Alert.alert(JSON.stringify(response));
     setModalVisible(!modalVisible);
-      login(tokens);
+    setUserId();
+    login(tokens);
   };
 
-//   const locationAddress = () => {
-//     Geocoding.init('AIzaSyD33wZr809ySlFdDUF_UnxRB0TO91R3uqY');
-//     //     const latitude = 37.7749; // Example latitude (San Francisco)
-// //     const longitude = -122.4194; // Example longitude (San Francisco)
-//     // Call reverse geocoding
-//     Geocoding.from(location.latitude, location.longitude)
-//       .then((json) => {
-//         if (json.results && json.results.length > 0) {
-//           const formattedAddress = json.results[0].formatted_address;
-//           setUserAddress(formattedAddress);
-//         } else {
-//           setError('No address found for these coordinates.');
-//         }
-//       })
-//       .catch((err) => {
-//         setError('Error: ' + err.message);
-//       });
-//   }
-
+  // Request permission for location (Android only)
   useEffect(() => {
-    // Ensure API is initialized with a valid key
-    Geocoding.init('AIzaSyD33wZr809ySlFdDUF_UnxRB0TO91R3uqY');
+    if (Platform.OS === 'android') {
+      requestLocationPermission();
+    }
 
-    // Call reverse geocoding
-    Geocoding.from(location.latitude, location.longitude)
+    // Initialize Geocoding API with your key
+    Geocoding.init(GOOGLE_KEY);  // Replace with your actual API Key
+  }, []);
+
+  // Request location permission on Android
+  const requestLocationPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: "Location Permission",
+          message: "We need access to your location to get your address."
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("Location permission granted");
+      } else {
+        setError("Location permission denied");
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  // Function to get the current position
+  const getCurrentPosition = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocation({ latitude, longitude, error: null });
+
+        // Once the location is fetched, trigger geocoding to get address
+        fetchAddress(latitude, longitude);
+      },
+      (error) => {
+        setLocation({ ...location, error: error.message });
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  };
+
+  // Function to fetch address using reverse geocoding
+  const fetchAddress = (latitude, longitude) => {
+    Geocoding.from(latitude, longitude)
       .then((json) => {
         if (json.results && json.results.length > 0) {
           const formattedAddress = json.results[0].formatted_address;
@@ -127,35 +191,28 @@ const LocationScreen = ({ route }) => {
       .catch((err) => {
         setError('Error: ' + err.message);
       });
-  }, []);
-
-  const getCurrentPosition = async () => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          error: null,
-        });
-
-      },
-      (error) => {
-        setLocation({
-          ...location,
-          error: error.message,
-        });
-      }
-    );
   };
 
-  useEffect(() => {
-    getCurrentPosition();
-  },[]);
 
-  const getToken = async() =>{
+  const setLocationLogin = async () => {
+    getCurrentPosition();
+    await AsyncStorage.setItem('latitude', JSON.stringify(UserAddress));
+    
+  }
+  const LocationLogin = async () => {
+    getCurrentPosition();
+    await AsyncStorage.setItem('latitude', JSON.stringify(UserAddress));
+    setUserId();
     login(tokens);
   }
-
+   const LocationFrom = async () => {
+    const manuallyAddress = 'true';
+    await AsyncStorage.setItem("manuallyAddress", manuallyAddress);
+    setModalVisible(true);
+    setUserId();
+    login(tokens);
+  }
+  
 
   return (
     <View style={styles.main_view}>
@@ -165,159 +222,6 @@ const LocationScreen = ({ route }) => {
         <Text style={styles.text_1}>Your One Stop Solution</Text>
       </View>
       <View style={styles.second_view}>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            Alert.alert('Modal has been closed.');
-            setModalVisible(!modalVisible);
-          }}>
-          <View style={styles.centeredViewModal}>
-            <View style={styles.modalViewModal}>
-              <TouchableOpacity
-                onPress={() => setModalVisible(!modalVisible)}
-                style={{
-                  width: '100%',
-                  height: 48,
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                }}>
-                <View
-                  style={{
-                    width: 32,
-                    height: 4,
-                    borderRadius: 8,
-                    backgroundColor: '#79747E',
-                    alignSelf: 'center',
-                  }}></View>
-              </TouchableOpacity>
-              <View style={{ width: '100%', height: 190 }}>
-                <MapView
-                  style={{ width: '100%', height: '100%' }}
-                  initialRegion={{
-                    latitude: 37.78825,
-                    longitude: -122.4324,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421,
-                  }}
-                />
-              </View>
-              <View style={{ paddingHorizontal: 30 }}>
-                <Text style={styles.text_3Modal}>{UserAddress}</Text>
-                <Text style={styles.text_4Modal}>
-                  {UserAddress} (M.P.) {'\n'}
-                  Ph: +91 1234567890
-                </Text>
-                <ScrollView style={{ height: 200, marginTop:10, }}>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="First Name"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setFirstName(x)}
-                      value={firstName}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Last Name"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setLastName(x)}
-                      value={lastName}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Address 1"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setAddressLine1(x)}
-                      value={addressLine1}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Phone"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setPhone(x)}
-                      value={phone}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Address 2"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setAddressLine2(x)}
-                      value={addressLine2}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Landmark"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setLandmark(x)}
-                      value={landmark}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="City"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setCity(x)}
-                      value={city}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="State"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setState(x)}
-                      value={state}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Pincode"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setPincode(x)}
-                      value={pincode}
-                    />
-                  </View>
-                </ScrollView>
-                <View style={{ flexDirection: 'row', marginTop: 50, }}>
-                  <TouchableOpacity style={styles.btn1Modal}>
-                    <Text style={styles.btnText1Modal}>Home</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.btn2Modal}>
-                    <Text style={styles.btnText2Modal}>Others</Text>
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={styles.input_box2Modal}
-                  onPress={() => UserLoginApi()}>
-                  <Text style={styles.text_6Modal}>Save changes</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
         <View
           style={{
             width: '100%',
@@ -334,22 +238,31 @@ const LocationScreen = ({ route }) => {
               alignSelf: 'center',
             }}></View>
         </View>
+
+
+        <ModalComponent visible={locationModal} onClose={() => LocationFrom()} />
+
+
         <Text style={styles.text_3}>Enable Location </Text>
         <Text style={styles.text_4}>
           Please enable your location {'\n'} so that we can serve you better
         </Text>
         <Image source={require('../../Icons/Group.png')} />
-        <TouchableOpacity
+        {UserAddress == '' ? (<TouchableOpacity
           style={[styles.button]}
-          onPress={() => getToken()}>
+          onPress={() => setLocationLogin()}>
           <Text style={styles.text_5}>Enable Location</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>) : (<TouchableOpacity
+          style={[styles.button]}
+          onPress={() => LocationLogin()}>
+          <Text style={styles.text_5}>Enable Location</Text>
+        </TouchableOpacity>)}
         <TouchableOpacity
           style={[styles.button]}
-          onPress={() => setModalVisible(true)}>
+          onPress={() => setLocationModal(true)}>
           <Text style={styles.text_5}>Enter Location Manually</Text>
         </TouchableOpacity>
-        <Text style={styles.text_4}>No, I’ll do it later</Text>
+        {/* <Text style={styles.text_4}>No, I’ll do it later</Text> */}
       </View>
     </View>
   );

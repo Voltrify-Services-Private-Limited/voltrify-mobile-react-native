@@ -8,60 +8,97 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import RazorpayCheckout from 'react-native-razorpay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RAZORPAY_KEY } from '../../EnvFolder/env';
 const PaymentScreen = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [number, setNumber] = useState('');
-  const [cart_id, setCart_id] = useState('27847d0a-fad8-42e4-a70d-15e67ba4ca54');
   const [address_id, setAddress_id] = useState('a3163034-c326-4a68-ac9e-ce203b206180');
   const { condition_Id } = route.params;
-  const { time_slot } = route.params;
+  const [payment_id ,setPayment_id] = useState('')
+  const [paymentOrderId ,setPaymentOrderId] = useState('')
 
   ////////////// Payment Methods ///////////////
-
+  const currency = 'INR'; 
   const paymentHandle = async () => {
+    const userName = await AsyncStorage.getItem('userName');
+    const phoneNumber = await AsyncStorage.getItem('userNumber');
+    const userEmail = await AsyncStorage.getItem('userEmail');
+    const price = await AsyncStorage.getItem('final_price');
+    const finalPrice = JSON.parse(price);
     const options = {
-      orderId: "904bf10a-ff89-40b2-b1be-d68b57e69914",
+      orderId: paymentOrderId ,
       description: 'Credits towards consultation',
       image: 'https://i.imgur.com/3g7nmJC.png',
-      currency: 'INR',
-      key: 'rzp_test_hlMav0jYthWSud',
-      amount: '1000',
-      external: {
-        wallets: ['paytm']
-      },
-      name: 'foo',
+      currency: currency,
+      key: RAZORPAY_KEY,
+      amount: finalPrice*100,
+      name: 'Voltrify',
       prefill: {
-        email: 'akshay@razorpay.com',
-        contact: '8955806560',
-        name: 'Akshay Bhalotia'
+        email: userEmail,
+        contact: phoneNumber,
+        name: userName
       },
       theme: { color: '#F37254' }
     }
     RazorpayCheckout.open(options).then((data) => {
-      // handle success
-      Alert.alert(`Success: ${JSON.stringify(data)}`);
-    }).catch((error) => {
-      // handle failure
-      Alert.alert(`Error: ${error.code} | ${error.description}`);
-    });
-    RazorpayCheckout.onExternalWalletSelection(data => {
-      Alert.alert(`External Wallet Selected: ${data.external_wallet} `);
+      // Handle success here
+      setPayment_id(JSON.stringify(data));
+      console.log('Payment success:', data);
+      // data.signature, data.paymentId, and data.orderId can be used for further verification.
+      VerifyOrder();
+      navigation.navigate('OrderVerify',{order_id:paymentOrderId});
+    })
+    .catch((error) => {
+      // Handle failure here
+      console.log('Payment failed:', error);
     });
   }
+  
+  
+  const VerifyOrder = async () => {
+    // const razorpayPayment = JSON.parse(payment_id);
+    // const reqBody = JSON.stringify({
+    //   razorpay_order_id: paymentOrderId,
+    //   razorpay_payment_id: razorpayPayment,
+    //   razorpay_signature: "1a3b5c6d7e8f9g0h1i2j3k4l5m6n7o8p",
+    // })
+    // console.log("req payment body:", reqBody);
+    const url = 'http://api.voltrify.in/payment/verify';
+    result = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        razorpay_order_id: paymentOrderId,
+        razorpay_payment_id: razorpayPayment,
+        razorpay_signature: "1a3b5c6d7e8f9g0h1i2j3k4l5m6n7o8p",
+      }),
+    });
 
+    response = await result.json();
+    console.log('Order Verify', response);
+    Alert.alert("Order Verify === ",JSON.stringify(response));
+   
+  };
+
+    useEffect(() => {
+    createOrder(); 
+    }, []);
   const createOrder = async () => {
     const userData = await AsyncStorage.getItem('access_token');
-    const time_slot = await AsyncStorage.getItem('time_slot');
     const coupons_code = await AsyncStorage.getItem('coupanCode');
     const service_description = await AsyncStorage.getItem('service_description');
-    const timeSlot = await AsyncStorage.getItem('timeSlot');
+    const timeSlot = await AsyncStorage.getItem('time_slot');
+    const dateSlot = await AsyncStorage.getItem('slot_no_day');
+    const cart_id = await AsyncStorage.getItem('cartId');
+    const address = await AsyncStorage.getItem('addressId');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
     const time = JSON.parse(timeSlot);
+    const date = JSON.parse(dateSlot);
     const url = 'http://api.voltrify.in/user/orders';
     result = await fetch(url, {
       method: 'POST',
@@ -70,21 +107,29 @@ const PaymentScreen = ({ route }) => {
         'Content-Type': 'application/json', // Optional, depending on your API requirements
       },
       body: JSON.stringify({
-        cart_id: "ebb52f0b-477c-47d9-b351-15320931ab6e",
-        address_id: address_id,
+        cart_id: cart_id,
+        address_id: address,
         condition_id: condition_Id,
-        time_slot: time,
+        time_slot: time ,
         coupons_code: coupons_code,
         payment_mode: "online",
-        service_description: "damaged",
-        date: "02-02-2025",
+        service_description: service_description,
+        date: date,
       }),
     });
-    console.log('======', time + coupons_code + service_description + condition_Id + cart_id + address_id)
+    console.log('======', time + coupons_code + service_description + condition_Id + "cart Id", cart_id + address_id)
     response = await result.json();
     console.log('order data========', response);
-    Alert.alert(JSON.stringify(response));
+    setPaymentOrderId(response.data.payment_order_id);
+    console.log("paymentOrderId", paymentOrderId);
+    await AsyncStorage.setItem("orderId",paymentOrderId);
+    // Alert.alert(JSON.stringify(response));
   };
+
+  const OrderCreate = () =>{
+    // createOrder();
+    paymentHandle();
+  }
 
   return (
     <View style={styles.mainView}>
@@ -119,7 +164,7 @@ const PaymentScreen = ({ route }) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
           <View style={styles.paymentList}>
-            <TouchableOpacity onPress={() => paymentHandle()}>
+            <TouchableOpacity onPress={() => OrderCreate()}>
               <View style={{ flexDirection: 'row' }}>
                 <Image source={require('../../Icons/phonePe.png')} />
                 <Text style={styles.text_2}>Phone Pe</Text>
@@ -178,7 +223,6 @@ const PaymentScreen = ({ route }) => {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
-          Alert.alert('Modal has been closed.');
           setModalVisible(!modalVisible);
         }}>
         <View style={styles.centeredView}>

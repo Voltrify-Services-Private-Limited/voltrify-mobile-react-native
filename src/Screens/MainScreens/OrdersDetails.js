@@ -14,61 +14,41 @@ import {
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import moment from 'moment';
 
-const ChooseDay = [
-  { id: 1, day: 'Mon', selected: false },
-  { id: 2, day: 'Tue', selected: false },
-  { id: 3, day: 'Wed', selected: false },
-  { id: 4, day: 'Thu', selected: false },
-  { id: 5, day: 'Fri', selected: false },
-  { id: 6, day: 'Sat', selected: false },
-]
-const ChooseTime = [
-  { id: 1, time: '08:00 AM', selected: false },
-  { id: 2, time: '08:10 AM', selected: false },
-  { id: 3, time: '08:20 AM', selected: false },
-  { id: 4, time: '08:30 AM', selected: false },
-  { id: 5, time: '08:40 AM', selected: false },
-  { id: 6, time: '08:50 AM', selected: false },
-  { id: 7, time: '09:00 AM', selected: false },
-  { id: 8, time: '09:10 AM', selected: false },
-  { id: 9, time: '09:20 AM', selected: false },
-  { id: 10, time: '09:30 AM', selected: false },
-  { id: 11, time: '09:40 AM', selected: false },
-  { id: 12, time: '09:50 AM', selected: false },
-  { id: 13, time: '10:00 AM', selected: false },
-  { id: 14, time: '10:10 AM', selected: false },
-  { id: 15, time: '10:20 AM', selected: false },
-  { id: 16, time: '10:30 AM', selected: false },
-  { id: 17, time: '10:40 AM', selected: false },
-  { id: 18, time: '10:50 AM', selected: false },
-  { id: 19, time: '11:00 AM', selected: false },
-  { id: 20, time: '11:10 AM', selected: false },
-]
 // import Progress from 'react-native-progress';
 
 const OrdersDetails = ({ route }) => {
   const navigation = useNavigation();
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [dayData, setDayData] = useState(ChooseDay);
-  const [timeData, setTime] = useState(ChooseTime);
   const [currentLocation, setCurrentLocation] = useState("");
-  const [selectedId, setSelectedId] = useState([]);
-  const [selectedTime, setSelectedTime] = useState([]);
+  // State to hold the selected date
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedCurrent, setSelectCurrent] = useState(null);
   const { order_id } = route.params;
+  const { device_id } = route.params;
+  const [idDevice, setIdDevice] = useState('');
+  const [modalCancle, setModalCancle] = useState(false);
 
   useEffect(() => {
     getAllService();
-    console.log('===== Order Detail ======', order_id);
+    getDeviceId();
+    console.log('===== Order Detail ======', device_id);
   }, []);
+
+  const getDeviceId = async () => {
+    setIdDevice(device_id);
+    console.log("aabsbubabau", data.service_charge);
+  }
 
   const getAllService = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-
-      const response = await fetch(`http://api.voltrify.in/service/${order_id}`, {
+      const latitude = await AsyncStorage.getItem("latitude");
+      setCurrentLocation(latitude);
+      const response = await fetch(`http://api.voltrify.in/user/orders/${order_id}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,6 +61,7 @@ const OrdersDetails = ({ route }) => {
       }
       const resData = await response.json();
       setData(resData.data);
+      console.log(resData)
     } catch (err) {
       console.log('get Order err --- ', err);
     }
@@ -98,22 +79,19 @@ const OrdersDetails = ({ route }) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json', // Optional, depending on your API requirements
         },
-        body: JSON.stringify({ data }), // Replace with your data structure
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
       const jsonResponse = await response.json();
-      console.log('Success', 'Data updated successfully!', [{ text: 'OK' }]);
-      Alert.alert(jsonResponse);
+      console.log('Success', 'Data updated successfully!', jsonResponse);
+      navigation.navigate('CancleOrder');
     } catch (error) {
       console.log('Error', error.message, [{ text: 'OK' }]);
     }
-  }; const RescheduleOrder = async () => {
+  };
+  const RescheduleOrder = async () => {
     const userData = await AsyncStorage.getItem('access_token');
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    const timeSlot = await AsyncStorage.getItem('time_slot')
+    const time = JSON.parse(timeSlot);
     try {
       const response = await fetch(`http://api.voltrify.in/user/orders/reschedule/${order_id}`, {
         method: 'PUT',
@@ -122,79 +100,81 @@ const OrdersDetails = ({ route }) => {
           'Content-Type': 'application/json', // Optional, depending on your API requirements
         },
         body: JSON.stringify({
-          time_slot: selectedTime,
+          time_slot: time,
         }), // Replace with your data structure
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
       const jsonResponse = await response.json();
-      console.log('Success', 'Data updated successfully!', [{ text: 'OK' }]);
-      Alert.alert(jsonResponse);
+      console.log('Success', 'Data updated successfully!', jsonResponse);
     } catch (error) {
       console.log('Error', error.message, [{ text: 'OK' }]);
     }
   };
 
-  const selectSlot = () => {
+  const selectSlotOpen = () => {
+    setModalVisible(!modalVisible);
+  }
+  const selectSlotClose = () => {
     setModalVisible(!modalVisible);
     RescheduleOrder();
   }
 
-  // Function to handle text press
-  const handlePressDay = async (day) => {
-    // Change the text color on press
-    Alert.alert(JSON.stringify(day));
-    if (selectedId.includes(day)) {
-      // If the item is already selected, remove it from the selectedIds array
-      setSelectedId(selectedId.filter(selectedId => selectedId !== day));
-    } else {
-      // If the item is not selected, add it to the selectedIds array
-      setSelectedId([...selectedId, day]);
+  // Start with 12:30 PM
+  const startTime = moment().set('hour', 12).set('minute', 30).set('second', 0).set('millisecond', 0);
+
+  // Create an array to store the times
+  const times = [];
+
+  // Loop to generate the next 12 times, each 1 hour after the previous one
+  for (let i = 0; i < 20; i++) {
+    const time = startTime.clone().add(i, 'hours').format('hh:mm A');
+    times.push(time);
+  }
+
+  // State to store the selected time (only one time can be selected at a time)
+  // Function to render times in 4 columns
+  const renderTimesInRows = (times) => {
+    let rows = [];
+    for (let i = 0; i < times.length; i += 5) {
+      rows.push(times.slice(i, i + 5));  // Slice out each set of 4 times
     }
-    await AsyncStorage.setItem("slot_no_day", JSON.stringify(selectedId));
-  };  // Function to handle text press
-  const handlePressTime = async (time) => {
-    // Change the text color on press
-    Alert.alert(JSON.stringify(time));
-    if (selectedTime.includes(time)) {
-      // If the item is already selected, remove it from the selectedIds array
-      setSelectedTime(selectedTime.filter(selectedTime => selectedTime !== time));
-    } else {
-      // If the item is not selected, add it to the selectedIds array
-      setSelectedTime([...selectedTime, time]);
-    }
-    await AsyncStorage.setItem("time_slot", JSON.stringify(selectedTime));
+    return rows;
   };
 
-  const Choose_Day_Date = ({ item }) => {
-    const backgroundColor = selectedId.includes(item.day) ? 'orange' : 'white';
-    const textColor = selectedId.includes(item.day) ? 'white' : 'black';
-    const borderColor = selectedId.includes(item.day) ? 'orange' : 'black';
-    return (
-      <TouchableOpacity
-        onPress={() => handlePressDay(item.day)}
-        style={[styles.dayCard, { backgroundColor, borderColor: borderColor }]}
-      >
-        <Text style={{ fontSize: 10, fontWeight: 400, lineHeight: 12, textAlign: "center", color: textColor }}>{item.day}</Text>
-        <Text style={{ fontSize: 10, fontWeight: 600, lineHeight: 12, textAlign: "center", color: textColor }}>{item.id}</Text>
-      </TouchableOpacity>
-    );
-  };
-  const Choose_Time = ({ item }) => {
-    const backgroundColor = selectedTime.includes(item.time) ? 'orange' : 'white';
-    const textColor = selectedTime.includes(item.time) ? 'white' : 'black';
-    const borderColor = selectedTime.includes(item.time) ? 'orange' : 'black';
-    return (
-      <TouchableOpacity onPress={() => handlePressTime(item.time)}>
-        <View style={[styles.timeCard, { backgroundColor, justifyContent: 'center', borderColor: borderColor }]}>
-          <Text style={[styles.time_text, { color: textColor }]}>{item.time}</Text>
-        </View>
-      </TouchableOpacity>
-    )
+
+  const startDate = moment();
+
+  // Create an array to store the days and dates (without times)
+  const daysAndDates = [];
+
+  // Loop to generate the next 10 days (1 week)
+  for (let i = 0; i < 10; i++) {
+    const day = startDate.clone().add(i, 'days').format('DD-MM-YYYY'); // Add 1 day for each iteration
+    daysAndDates.push(day);
   }
+  const renderWeekInRows = (daysAndDates) => {
+    let rows = [];
+    for (let i = 0; i < daysAndDates.length; i += 5) {
+      rows.push(daysAndDates.slice(i, i + 5));  // Slice out each set of 5 dates
+    }
+    return rows;
+  };
+
+  const handleDateSelect = async (date) => {
+    setSelectedDate(date); // Set the selected date to state
+    await AsyncStorage.setItem("slot_no_day", JSON.stringify(date));
+  };
+
+  const handleTimeSelect = async (current) => {
+    setSelectCurrent(current); // Set the selected date to state
+    await AsyncStorage.setItem("time_slot", JSON.stringify(current));
+  };
+
+
+  const setOrderRequire = async (id) => {
+    navigation.navigate("EditOrder", { id_Device: idDevice })
+    await AsyncStorage.setItem('orderId', id)
+  }
+
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
@@ -209,190 +189,80 @@ const OrdersDetails = ({ route }) => {
         <View>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.navigate("EditOrder")}>
+            onPress={() => setOrderRequire(data.id)}>
             <Image source={require('../../Icons/edit.png')} />
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView scrollEnabled={false}>
-        {data.map(item => (
-          <View key={item}>
-            <Text style={styles.orderText1}>{item.name}</Text>
-          </View>
-        ))}
-        {data.map(item => (
-          <View key={item}>
-            <Text style={styles.orderText2}>
-              {item.description}
-            </Text>
-          </View>
-        ))}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Text style={styles.orderText1}>{data.service_type}</Text>
+        <Text style={styles.orderText2}>{data.user_description} </Text>
         <View style={styles.listView}>
           <View style={styles.listItem}>
             <View style={styles.leftSide}>
-              <Text>Date</Text>
-              <Text>22/07/23</Text>
+              <Text style={styles.lable}>Date</Text>
+              <Text style={styles.value}>{data.date}</Text>
             </View>
             <View style={styles.leftSide}>
-              <Text>Time</Text>
-              <Text>09:00 AM</Text>
+              <Text style={styles.lable}>Time</Text>
+              <Text style={styles.value}>{data.time_slot}</Text>
             </View>
           </View>
-          <View style={styles.listItem}>
-            <View style={styles.leftSide}>
-              <Text>Service provider</Text>
-              <Text>Sylvia</Text>
-            </View>
-            <View style={styles.leftSide}>
-              <Text>Price</Text>
-              <Text>₹499</Text>
+          <View style={[styles.listView, { paddingHorizontal: 0 }]}>
+            <View style={styles.listItem}>
+              <View style={styles.leftSide}>
+                <Text style={styles.lable}>Device Brand</Text>
+                {data.user_device_brand == null ? (
+                  <Text style={styles.value}>NA</Text>
+                ) : (<Text style={styles.value}>{data.user_device_brand}</Text>)}
+              </View>
+              <View style={styles.leftSide}>
+                <Text style={styles.lable}>Price</Text>
+                <Text style={styles.value}>₹ {data.final_amount}</Text>
+              </View>
             </View>
           </View>
         </View>
         <View style={styles.listView}>
           <View style={styles.listItem}>
             <View style={styles.leftSide}>
-              <Text>Cleaning tools</Text>
-              <Text>Included</Text>
+              <Text style={styles.lable}>Device Modal</Text>
+              {data.user_device_model == null ? (
+                <Text style={styles.value}>NA</Text>
+              ) : (<Text style={styles.value}>{data.user_device_model}</Text>)}
             </View>
             <View style={styles.leftSide}>
-              <Text>Detergent</Text>
-              <Text>Included</Text>
+              <Text style={styles.lable}>Payment Mode</Text>
+              <Text style={styles.value}>{data.payment_mode}</Text>
             </View>
           </View>
-          <View style={styles.listItem}>
-            <View style={styles.leftSide}>
-              <Text>Eco fee</Text>
-              <Text>₹100</Text>
+          <View style={[styles.listView, { paddingHorizontal: 0 }]}>
+            <View style={styles.listItem}>
+              <View style={styles.leftSide}>
+                <Text style={styles.lable}>Status</Text>
+                <Text style={styles.value}>{data.status}</Text>
+              </View>
             </View>
           </View>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => selectSlot()}>
-              <Text style={styles.buttonText}>Reschedule</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#FB923C' }]} onPress={() => cancleOrder()}>
-              <Text style={[styles.buttonText, { color: '#ffffff' }]}>
-                Cancle order
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {/* <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginHorizontal: 1,
-            }}> */}
-          {/* <View>
-              <Text style={styles.ratingText}>5</Text>
-              <View style={{ flexDirection: 'row', marginVertical: 5 }}>
-                <Image source={require('../../Icons/starFill2.png')} />
-                <Image source={require('../../Icons/starFill2.png')} />
-                <Image source={require('../../Icons/starFill2.png')} />
-                <Image source={require('../../Icons/starFill2.png')} />
-                <Image source={require('../../Icons/starblank2.png')} />
-              </View>
-              <Text style={styles.reviewsText}>12 reviews</Text>
-            </View> */}
-          {/* <View>
-              <View style={{ flexDirection: 'row', marginVertical: 5 }}>
-                <Text style={styles.barText1}>5</Text>
-                <View style={{ justifyContent: 'center' }}>
-                  {/* <Progress.Bar
-                  progress={0.9}
-                  animated={false}
-                  color="#FB923C"
-                  unfilledColor="#D1DBE8"
-                  height={7.38}
-                  borderRadius={4}
-                  borderWidth={0}
-                /> */}
-          {/* <View style={styles.progress_1}>
-                    <View style={styles.progress_2}></View>
-                  </View>
-                </View>
-                <Text style={styles.barText2}>90%</Text>
-              </View>
-              <View style={{ flexDirection: 'row', marginVertical: 5 }}>
-                <Text style={styles.barText1}>4</Text>
-                <View style={{ justifyContent: 'center' }}> */}
-          {/* <Progress.Bar
-                  progress={0.1}
-                  animated={false}
-                  color="#FB923C"
-                  unfilledColor="#D1DBE8"
-                  height={7.38}
-                  borderRadius={4}
-                  borderWidth={0}
-                /> */}
-          {/* <View style={styles.progress_1}>
-                    <View style={styles.progress_3}></View>
-                  </View>
-                </View>
-                <Text style={styles.barText2}>10%</Text>
-              </View>
-              <View style={{ flexDirection: 'row', marginVertical: 5 }}>
-                <Text style={styles.barText1}>3</Text>
-                <View style={{ justifyContent: 'center' }}> */}
-          {/* <Progress.Bar
-                  progress={0.0}
-                  animated={false}
-                  color="#FB923C"
-                  unfilledColor="#D1DBE8"
-                  height={7.38}
-                  borderRadius={4}
-                  borderWidth={0}
-                /> */}
-          {/* <View style={styles.progress_1}>
-                    <View style={styles.progress_4}></View>
-                  </View>
-                </View>
-                <Text style={styles.barText2}>0%</Text>
-              </View>
-              <View style={{ flexDirection: 'row', marginVertical: 5 }}>
-                <Text style={styles.barText1}>2</Text>
-                <View style={{ justifyContent: 'center' }}> */}
-          {/* <Progress.Bar
-                  progress={0.0}
-                  animated={false}
-                  color="#FB923C"
-                  unfilledColor="#D1DBE8"
-                  height={7.38}
-                  borderRadius={4}
-                  borderWidth={0}
-                /> */}
-          {/* <View style={styles.progress_1}>
-                    <View style={styles.progress_4}></View>
-                  </View>
-                </View>
-                <Text style={styles.barText2}>0%</Text>
-              </View>
-              <View style={{ flexDirection: 'row', marginVertical: 5 }}>
-                <Text style={styles.barText1}>1</Text>
-                <View style={{ justifyContent: 'center' }}> */}
-          {/* <Progress.Bar
-                  progress={0.0}
-                  animated={false}
-                  color="#FB923C"
-                  unfilledColor="#D1DBE8"
-                  height={7.38}
-                  borderRadius={4}
-                  borderWidth={0}
-                /> */}
-          {/* <View style={styles.progress_1}>
-                    <View style={styles.progress_4}></View>
-                  </View>
-                </View>
-                <Text style={styles.barText2}>0%</Text>
-              </View> 
-            </View> 
-          </View> */}
-          {/* 
-          <TouchableOpacity style={styles.buttonBottom}>
-            <Text style={styles.buttonText}>Submit review</Text>
-          </TouchableOpacity> */}
+          {data.status === 'pending' ? (
+            <View>
+
+            </View>
+          ) : (
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => selectSlotOpen()}>
+                <Text style={styles.buttonText}>Reschedule</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: '#FB923C' }]} onPress={() => setModalCancle(true)}>
+                <Text style={[styles.buttonText, { color: '#ffffff' }]}>
+                  Cancle order
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
       {/* ================= Add Service Modal Start========= */}
@@ -401,7 +271,6 @@ const OrdersDetails = ({ route }) => {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
-          Alert.alert('Modal has been closed.');
           setModalVisible(!modalVisible);
         }}>
         <View style={styles.centeredViewModal}>
@@ -428,18 +297,29 @@ const OrdersDetails = ({ route }) => {
               <Text style={styles.headerText_1}>
                 {currentLocation}
               </Text>
-              <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}}  />
+              <Image source={require('../../Icons/downArrow.png')} style={{ width: 12, height: 12 }} />
             </View>
             <Text style={{ fontSize: 12, fontWeight: 600, lineHeight: 14.4, color: "#1C1B1F" }}>When should the professional arrive?</Text>
             <Text style={{ fontSize: 10, lineHeight: 15, fontWeight: 400, color: "#A09CAB" }}>Your service will take approx. 40 Mins</Text>
             <View style={{ marginVertical: 10, }}>
-              <Text style={{ fontSize: 10, fontWeight: 500, lineHeight: 15, color: '#000000' }}>Choose Day & Date</Text>
-              <FlatList
-                data={dayData}
-                horizontal={true}
-                renderItem={Choose_Day_Date}
-                keyExtractor={item => item.id}
-              />
+              <Text style={{ fontSize: 10, fontWeight: 500, lineHeight: 15, color: '#000000' }}>Choose Date & Time</Text>
+              {renderWeekInRows(daysAndDates).map((row, rowIndex) => (
+                <View key={rowIndex} style={styles.row}>
+                  {row.map((date, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.dayCard,
+                        selectedDate === date && styles.selectedDateButton // Change background color if selected
+                      ]}
+                      onPress={() => handleDateSelect(date)}
+                    >
+                      <Text style={[styles.dateText, selectedDate === date && styles.selectedDateButton]}>{date}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+
             </View>
             <View style={styles.modalHeader}>
               <Image source={require('../../Icons/debit.png')} />
@@ -447,20 +327,53 @@ const OrdersDetails = ({ route }) => {
                 <Text style={styles.modalHeaderTitle}>Online payment only for selected date</Text>
               </View>
             </View>
-            <FlatList
-              data={timeData}
-              key={'#'}
-              renderItem={Choose_Time}
-              keyExtractor={item => "#" + item.id}
-              numColumns={4}
-            />
-            <TouchableOpacity style={styles.buttonBottomModal} onPress={() => setModalVisible(!modalVisible)}>
-              <Text style={styles.buttonText}>Proceed to checkout </Text>
+            {renderTimesInRows(times).map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.row}>
+                {row.map((current, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.timeCard,
+                      selectedCurrent === current && styles.selectedDateButton // Change background color if selected
+                    ]}
+                    onPress={() => handleTimeSelect(current)}
+                  >
+                    <Text style={[styles.time_text, selectedCurrent === current && styles.selectedDateButton]}>{current}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+            <TouchableOpacity style={styles.buttonBottomModal} onPress={() => selectSlotClose()}>
+              <Text style={styles.buttonText}>Reschedule Order </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       {/* ================= Add Service Modal End========= */}
+
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalCancle}
+        onRequestClose={() => {
+          setModalCancle(!modalCancle);
+        }}
+      >
+        <View style={styles.mainViewCancle}>
+          <View style={styles.modalViewCancle}>
+            <Text style={styles.modalTextCancle}>Please Cancle Your Order!</Text>
+            <View style={{ flexDirection: 'row', justifyContent: "space-between", }}>
+              <TouchableOpacity style={styles.modalBtn} onPress={() => setModalCancle(false)}>
+                <Text style={styles.modalBtnText}>Cancle</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalBtn} onPress={() => cancleOrder()}  >
+                <Text style={styles.modalBtnText}>Ok</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
@@ -498,24 +411,25 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     lineHeight: 16.8,
     color: '#000000',
+    marginHorizontal: 10,
   },
   orderText2: {
     fontSize: 10,
     fontWeight: 500,
     lineHeight: 16,
-    color: '#A09CAB',
+    color: '#000',
+    marginHorizontal: 10,
   },
   listView: {
-    height: 127,
+    height: 120,
     padding: 10,
-    marginVertical: 10,
   },
   listItem: {
     borderTopWidth: 0.87,
     width: 'auto',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    height: 58,
+    height: 'auto',
     borderTopColor: '#E5E8EB',
   },
   leftSide: {
@@ -603,47 +517,6 @@ const styles = StyleSheet.create({
     top: 25,
   },
 
-
-  centeredViewModal: {
-    flex: 1,
-    position: "absolute",
-    bottom: 0,
-    width: '100%',
-  },
-
-  main_viewModal: {
-    flex: 1,
-    backgroundColor: '#FB923C',
-  },
-  addressView: {
-    flexDirection: "row",
-    borderBottomWidth: 0.5,
-    paddingBottom: 5,
-    marginBottom: 10,
-  },
-  dayCard: {
-    width: 36,
-    height: 40,
-    borderRadius: 6,
-    borderWidth: 1,
-    paddingVertical: 8,
-    borderColor: '#A09CAB',
-    marginHorizontal: 4,
-  },
-
-  buttonBottomModal: {
-    width: "100%",
-    height: 54,
-    borderWidth: 1,
-    borderColor: '#FB923C',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 14,
-    position: "absolute",
-    marginHorizontal: 16,
-    bottom: 20,
-  },
-
   modalViewModal: {
     backgroundColor: 'white',
     width: '100%',
@@ -694,13 +567,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dayCard: {
-    width: 36,
-    height: 40,
+    width: 65,
+    height: 30,
     borderRadius: 6,
     borderWidth: 1,
     paddingVertical: 8,
     borderColor: '#A09CAB',
-    marginHorizontal: 4,
+    marginHorizontal: 2,
+    marginVertical: 4,
   },
 
   buttonBottomModal: {
@@ -715,7 +589,96 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     bottom: 20,
   },
+  /*============ Coupanns ==========*/
+  modalViewCoupans: {
+    backgroundColor: 'white',
+    width: '100%',
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+    padding: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    backgroundColor: '#fff',
+  },
+  buttonCoupans: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpenCoupans: {
+    backgroundColor: '#F194FF',
+  },
+  buttonCloseCoupans: {
+    backgroundColor: '#2196F3',
+  },
+  textStyleCoupans: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalTextCoupans: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  centeredViewCoupans: {
+    flex: 1,
+    width: "100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+  },
 
+  main_viewCoupans: {
+    flex: 1,
+    backgroundColor: '#FB923C',
+  },
+  input_box2Coupans: {
+    width: 328,
+    height: 54,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    borderColor: '#FB923C',
+    marginVertical: 40,
+    flexDirection: 'row',
+    alignItem: 'center',
+    justifyContent: 'center',
+  },
+  text_6Coupans: {
+    fontSize: 16,
+    fontWeight: 600,
+    color: '#000000',
+    lineHeight: 19.2,
+    paddingVertical: 16,
+    marginHorizontal: 5,
+  },
+  coupanCard: {
+    width: 'auto',
+    height: 120,
+    alignItems: "center",
+    paddingVertical: 10,
+    padding: 15,
+  },
+  code: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 600,
+  },
+  dicount: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#FB923C',
+    marginVertical: 6,
+  },
+  name: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 500,
+  },
   modalHeader: {
     width: '100%',
     height: 30,
@@ -732,12 +695,15 @@ const styles = StyleSheet.create({
     color: '#1C1B1F',
   },
   timeCard: {
-    width: 64,
-    height: 24,
+    width: 65,
+    height: 30,
     borderRadius: 6,
-    marginVertical: 10,
     borderWidth: 1,
-    marginHorizontal: 15,
+    paddingVertical: 8,
+    borderColor: '#A09CAB',
+    marginHorizontal: 2,
+    marginVertical: 4,
+    justifyContent: "center",
   },
   time_text: {
     fontSize: 10,
@@ -745,7 +711,90 @@ const styles = StyleSheet.create({
     color: '#000000',
     lineHeight: 12,
     textAlign: "center",
-  }
+  },
+  rowContainer: {
+    flexDirection: 'column',
+    flexWrap: 'wrap',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  dateText: {
+    fontSize: 10, fontWeight: 500, lineHeight: 12, textAlign: "center", color: '#000',
+  },
+
+  selectedDateButton: {
+    backgroundColor: '#FB923C',
+    color: '#fff',
+    borderColor: '#FB923C', // Background color when selected
+  },
+  mainViewCancle: {
+    flex: 1,
+    justifyContent: "center",
+    shadowColor: '#000',
+    backgroundColor: 'rgba(31, 31, 31, 0.5)',
+  },
+  modalViewCancle: {
+    margin: 20,
+    height: 'auto',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    paddingHorizontal: 35,
+    paddingVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTextCancle: {
+    marginBottom: 15,
+    marginTop: 20,
+    fontSize: 20,
+    color: "#000",
+    textAlign: 'center',
+  },
+  modalBtnText: {
+    fontSize: 14,
+    fontWeight: 600,
+    lineHeight: 16.8,
+    color: '#fff',
+  },
+  modalBtn: {
+    width: 100,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#FB923C",
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  lable: {
+    fontSize: 15,
+    fontWeight: 600,
+    color: '#000000',
+    textTransform: 'capitalize',
+  },
+
+  value: {
+    fontSize: 14,
+    fontWeight: 400,
+    color: '#000000',
+    textTransform: 'capitalize',
+  },
+  headerText_1: {
+    fontSize: 8,
+    fontWeight: 500,
+    lineHeight: 9.6,
+    color: '#000000B2',
+    marginHorizontal: 5,
+    marginTop: 1,
+  },
 
 });
 
