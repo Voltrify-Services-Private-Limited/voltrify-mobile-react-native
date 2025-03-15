@@ -10,7 +10,6 @@ const YourCart = ({ route }) => {
 
   useEffect(() => {
     getAllOrder();
-    console.log('Order', data);
     console.log("cart Id",orderId);
 
   }, []);
@@ -33,6 +32,7 @@ const YourCart = ({ route }) => {
       }
       const resData = await response.json();
       setData(resData.data);
+      await AsyncStorage.setItem("cart_id", data[0].id);
     } catch (err) {
       console.log('get Order err --- ', err);
     }

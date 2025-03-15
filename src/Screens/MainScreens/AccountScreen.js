@@ -7,36 +7,25 @@ import { useNavigation } from '@react-navigation/native';
 const AccountScreen = ({route}) => {
   const {logout} = React.useContext(AuthContext);
   const navigation = useNavigation();
-  const [user, setUser] = useState([]);
+  const [user_name, setUser_name] = useState('')
+  const [user_number, setUser_number] = useState('')
   useEffect(() => {
-    getProfile();
-    console.log("-------------user Data",user)
-    Alert.alert(JSON.stringify(user));
+    getProfile_id();
   }, []);
- const getProfile = async () => {
-   try {
-     const userData = await AsyncStorage.getItem('access_token');
-     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+   ///////////// Profile Id Start //////////////////
 
-     const response = await fetch('http://api.voltrify.in/user', {
-       method: 'GET',
-       headers: {
-         Authorization: `Bearer ${token}`,
-         'Content-Type': 'application/json', // Optional, depending on your API requirements
-       },
-     });
+   const getProfile_id = async () => {
+     const userName = await AsyncStorage.getItem('userName');
+     const phoneNumber = await AsyncStorage.getItem('userNumber');
+     setUser_name(userName);
+     setUser_number(phoneNumber);
+  };
 
-     if (!response.ok) {
-       throw new Error(`HTTP error! status: ${response.status}`);
-     }
-
-     const resData = await response.json();
-     setUser(JSON.stringify(resData));
-   } catch (err) {
-     console.log('get profile err --- ', err);
-   }
- };
-  console.log('profile', user);
+  const Logoutbtn = async() =>{
+    await AsyncStorage.removeItem('manuallyAddress');
+    logout();
+  }
+   ///////////// Profile Id End //////////////////
 
   return (
     <View style={styles.mainView}>
@@ -48,13 +37,8 @@ const AccountScreen = ({route}) => {
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/user.png')} />
             <View style={{justifyContent: 'center'}}>
-                 {/* {user.map(item => (
-                        <View key={item}>
-                          <Text style={styles.orderText1}>{item.firstName}</Text>
-                        </View>
-                      ))} */}
-              {/* <Text style={styles.userText}>{user.data.firstName}</Text>
-              <Text style={styles.numberText}>+91 {user.data.phoneNumber}</Text> */}
+              <Text style={styles.userText}>{user_name}</Text>
+              <Text style={styles.numberText}>+91 {user_number}</Text>
             </View>
           </View>
           <View style={styles.rightSide}>
@@ -65,7 +49,7 @@ const AccountScreen = ({route}) => {
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.listItem}
           onPress={() => navigation.navigate('MyRating')}>
           <View style={styles.rightSide}>
@@ -75,7 +59,7 @@ const AccountScreen = ({route}) => {
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={styles.listItem}
           onPress={() => navigation.navigate('ManageAddress')}>
@@ -98,7 +82,7 @@ const AccountScreen = ({route}) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
         </View>
-        <View style={styles.listItem}>
+        {/* <View style={styles.listItem}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/accountIcon4.png')} />
             <Text style={styles.listText}>Settings</Text>
@@ -106,7 +90,7 @@ const AccountScreen = ({route}) => {
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
-        </View>
+        </View> */}
         <TouchableOpacity
           style={styles.listItem}
           onPress={() => navigation.navigate('AboutUs')}>
@@ -119,7 +103,7 @@ const AccountScreen = ({route}) => {
           </View>
         </TouchableOpacity>
       </View>
-
+{/* 
       <View style={styles.giftBox}>
         <View style={styles.left}>
           <Text style={styles.giftHeading}>Refer & Earn ₹100</Text>
@@ -144,9 +128,9 @@ const AccountScreen = ({route}) => {
             style={{width: '100%', height: '100%'}}
           />
         </View>
-      </View>
+      </View> */}
 
-      <TouchableOpacity style={styles.logoutBtn} onPress={() => logout()}>
+      <TouchableOpacity style={styles.logoutBtn} onPress={() => Logoutbtn()}>
         <Image source={require('../../Icons/logout.png')} />
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>

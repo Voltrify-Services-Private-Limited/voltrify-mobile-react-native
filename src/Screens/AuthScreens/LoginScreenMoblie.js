@@ -11,11 +11,13 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showToast } from '../../Component/Toast';
 import { useNavigation } from '@react-navigation/native';
-const LoginScreenMobile = (props) => {
+import axios from 'axios';
+const LoginScreenMobile = ({route}) => {
   const navigation = useNavigation();
 
   const [phone_number, setPhoneNumber] = useState();
@@ -24,6 +26,26 @@ const LoginScreenMobile = (props) => {
     await AsyncStorage.setItem('phone_number', phone_number);
     console.log(phone_number);
   };
+
+  // const generateOtp = async () => {
+  //   try {
+  //     const response = await axios.post('http://api.voltrify.in/otp/generate-otp', {
+  //       phone_number: phone_number,
+  //     });
+
+  //     // Assuming the token is returned in the response.data.token
+  //     if (response) {
+  //       Alert.alert(JSON.stringify(response));
+  //       await AsyncStorage.setItem('phoneNumber', JSON.stringify(phone_number));
+  //       navigation.navigate('OtpScreen');
+  //     } else {
+  //       Alert.alert('No otp returned.');
+  //     }
+  //   } catch (err) {
+  //     Alert.alert('Error generating otp: ' + JSON.stringify(err.message));
+  //   }
+  // };
+
   const UserLoginApi = async () => {
     const url = 'http://api.voltrify.in/otp/generate-otp';
     result = await fetch(url, {
@@ -36,8 +58,6 @@ const LoginScreenMobile = (props) => {
 
     response = await result.json();
     console.log('login data', response);
-    Alert.alert(JSON.stringify(response));
-    setVisible(true);
   };
 
   const loginData = () => {
@@ -55,7 +75,7 @@ const LoginScreenMobile = (props) => {
       });
     } else {
       UserLoginApi();
-      props.navigation.navigate('OtpScreen', {phoneNumber: phone_number});
+      navigation.navigate('OtpScreen', {phoneNumber: phone_number});
     }
   };
   return (
@@ -105,20 +125,20 @@ const LoginScreenMobile = (props) => {
         <TouchableOpacity style={[styles.button]} onPress={() => loginData()}>
           <Text style={styles.text_5}>Send OTP</Text>
         </TouchableOpacity>
-        <View style={styles.lineBox}>
+        {/* <View style={styles.lineBox}>
           <View style={styles.line}></View>
           <Text style={styles.lineText}>or</Text>
           <View style={styles.line}></View>
         </View>
         <TouchableOpacity
           style={styles.input_box2}
-          onPress={() => props.navigation.navigate('LoginScreenEmail')}>
+          onPress={() => navigation.navigate('LoginScreenEmail')}>
           <Image
             source={require('../../Icons/google.png')}
             style={{marginVertical: 14, marginLeft: 30}}
           />
           <Text style={styles.text_6}>Sign in with Google</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <View
           style={{
             flexDirection: 'row',
@@ -164,7 +184,7 @@ const styles = StyleSheet.create({
   },
   second_view: {
     width: '100%',
-    height: 'auto',
+    height: 400,
     position: 'absolute',
     bottom: 0,
     alignItems: 'center',
@@ -229,6 +249,7 @@ const styles = StyleSheet.create({
     borderColor: '#FB923C',
     top: 50,
     marginVertical: 8,
+    marginBottom:30,
   },
   text_5: {
     fontSize: 16,

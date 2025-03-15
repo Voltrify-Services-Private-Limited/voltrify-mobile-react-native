@@ -14,10 +14,11 @@ import AccountScreen from '../Screens/MainScreens/AccountScreen';
 
 const mainstack = createBottomTabNavigator();
 
-const BottomTab = () => {
+const BottomTab = (props) => {
   return (
     <mainstack.Navigator
       screenOptions={{
+        tabBarHideOnKeyboard:true,
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',

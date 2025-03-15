@@ -1,7 +1,18 @@
-import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Linking} from 'react-native';
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 
-const SupportScreen = (props) => {
+const SupportScreen = ({route}) => {
+  const navigation = useNavigation();
+  const handlePress = () => {
+    // URL you want to open
+    const url = 'https://voltrify.in/';
+    
+    // Open the URL using the Linking API
+    Linking.openURL(url).catch((err) =>
+      console.error('Failed to open URL:', err)
+    );
+  };
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
@@ -10,7 +21,7 @@ const SupportScreen = (props) => {
       <View style={styles.listView}>
         <TouchableOpacity
           style={styles.listItem}
-          onPress={() => props.navigation.navigate('AccountSecond')}>
+          onPress={() => navigation.navigate('AccountSecond')}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/supportIcon1.png')} />
             <Text style={styles.listText}>Account</Text>
@@ -19,7 +30,8 @@ const SupportScreen = (props) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
         </TouchableOpacity>
-        <View style={styles.listItem}>
+      <TouchableOpacity onPress={() => handlePress()}>
+      <View style={styles.listItem}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/supportIcon2.png')} />
             <Text style={styles.listText}>Getting Started with Voltrify</Text>
@@ -28,7 +40,9 @@ const SupportScreen = (props) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
         </View>
-        <View style={styles.listItem}>
+      </TouchableOpacity>
+   <TouchableOpacity onPress={() => handlePress()}>
+   <View style={styles.listItem}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/supportIcon3.png')} />
             <Text style={styles.listText}>Payments </Text>
@@ -37,7 +51,9 @@ const SupportScreen = (props) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
         </View>
-        <View style={styles.listItem}>
+   </TouchableOpacity>
+      <TouchableOpacity onPress={() => handlePress()}>
+      <View style={styles.listItem}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/supportIcon4.png')} />
             <Text style={styles.listText}>Terms & Conditions</Text>
@@ -46,7 +62,9 @@ const SupportScreen = (props) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
         </View>
-        <View style={styles.listItem}>
+      </TouchableOpacity>
+     <TouchableOpacity onPress={() => handlePress()}>
+     <View style={styles.listItem}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/supportIcon5.png')} />
             <Text style={styles.listText}>Privacy Policy</Text>
@@ -55,12 +73,24 @@ const SupportScreen = (props) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
         </View>
+     </TouchableOpacity>
         <TouchableOpacity
           style={styles.listItem}
-          onPress={() => props.navigation.navigate('FrequentlyScreen')}>
+          onPress={() => navigation.navigate('FrequentlyScreen')}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/supportIcon6.png')} />
             <Text style={styles.listText}>FAQs</Text>
+          </View>
+          <View style={styles.rightSide}>
+            <Image source={require('../../Icons/rightArrow.png')} />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.listItem}
+          onPress={() => navigation.navigate('SupportContact')}>
+          <View style={styles.rightSide}>
+            <Image source={require('../../Icons/mobileIcon.png')} style={{width:20,height:20,marginTop:4,}} />
+            <Text style={styles.listText}>Contact</Text>
           </View>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/rightArrow.png')} />

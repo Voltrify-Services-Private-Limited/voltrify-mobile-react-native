@@ -1,26 +1,50 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ImageBackground, ScrollView, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DeviceServiceScreen from '../../Component/DeviceServiceScreen';
 
 const ServiceScreen = ({ route }) => {
   const navigation = useNavigation();
-  const [data, setData] = useState([]);
+  const [devicesData, setDevicesData] = useState([]);
+  const [filteredDevices, setFilteredDevices] = useState([]);
+  const [currentLocation, setCurrentLocation] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [manuallyLocation, setManuallyLocation] = useState('');
+  const [isRefersh, setIsRefersh] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [manuallyAddress, setManuallyAddress] = useState('false');
   useEffect(() => {
-    getAllService();
+    getAllDevices();
+    Manually_and_enable();
   }, []);
 
-  const getAllService = async () => {
+  useEffect(() => {
+    // Filter devices when searchQuery changes
+    if (searchQuery === '') {
+      setFilteredDevices(devicesData);
+    } else {
+      setFilteredDevices(
+        devicesData.filter((item) =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+  }, [searchQuery, devicesData]);
+
+  const getAllDevices = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
-      const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+      const token = JSON.parse(userData);
+      const latitude = await AsyncStorage.getItem("latitude");
+      const geoLocation = JSON.parse(latitude);
+      setCurrentLocation(geoLocation);
 
-      const response = await fetch('http://api.voltrify.in/service', {
+      const response = await fetch('http://api.voltrify.in/devices', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json', // Optional, depending on your API requirements
+          'Content-Type': 'application/json',
         },
       });
 
@@ -28,262 +52,108 @@ const ServiceScreen = ({ route }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const resData = await response.json();
-      setData(resData.data);
+      setDevicesData(resData.data);
+      setFilteredDevices(resData.data); // Initially, set filtered devices as all devices
     } catch (err) {
-      console.log('get Service err --- ', err);
+      console.log('Service Data err --- ', err);
     }
   };
-  console.log('Service', data);
 
-  const renderItem_first = ({ item }) => (
-    <View>
-      <ImageBackground
-        style={styles.cardBox2}
-        source={require('../../Icons/image7.png')}
-        resizeMode="cover">
-        <LinearGradient
-          colors={['#FFFFFF00', '#FFFFF000', '#FB923C']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.linerStyle}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ServiceDetails', {
-              service_id: item.id,
-            })}>
-            <Text style={styles.textCard}>{item.name}</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </ImageBackground>
-    </View>
-  );
-
-  const renderItem_second = ({ item }) => (
-    <TouchableOpacity
-    onPress={() => navigation.navigate('ServiceDetails', {
-      service_id: item.id,
-    })}>
-      
-    <View style={styles.cardBox}>
-      <Image
-        source={require('../../Icons/serviceImage.png')}
-        style={{ width: '100%', borderRadius: 10 }}
-      />
-      <Text style={styles.cardNameText}>
-        {item.name}
-      </Text>
-      <Text style={styles.cardText2}>
-        {item.description}
-      </Text>
-      <View style={{ flexDirection: 'row' }}>
-        <Image source={require('../../Icons/starfill.png')} />
-        <Image source={require('../../Icons/starfill.png')} />
-        <Image source={require('../../Icons/starfill.png')} />
-        <Image source={require('../../Icons/starfill.png')} />
-        <Image source={require('../../Icons/starfill.png')} />
-      </View>
+  const devicesItem = ({ item }) => (
+    <View style={styles.sliderCard}>
       <View
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          marginVertical: 3,
+          marginVertical: 10,
+          paddingHorizontal: 10,
+          width: '100%',
         }}>
-        <Text style={styles.text_2}>({item.visitingCharge})</Text>
-        <Text style={styles.text_3}>₹ {item.price}</Text>
+        <Text style={styles.heading1}>{item.name}</Text>
       </View>
+      <DeviceServiceScreen deviceitemid={item.id} />
     </View>
-  </TouchableOpacity>
   );
 
-  const renderItem_Third = ({ item }) => (
-    <View>
-      <ImageBackground
-        style={styles.cardBox2}
-        source={require('../../Icons/image7.png')}
-        resizeMode="cover">
-        <LinearGradient
-          colors={['#FFFFFF00', '#FFFFFF00', '#000000']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.linerStyle}>
-          <TouchableOpacity
-             onPress={() => navigation.navigate('ServiceDetails', {
-              service_id: item.id,
-            })}>
-            <Text style={styles.textCard}>{item.name}</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </ImageBackground>
-    </View>
-  );
+  const Manually_and_enable = async () => {
+    const manuallyAddress_Key = await AsyncStorage.getItem("manuallyAddress");
+    setManuallyAddress(manuallyAddress_Key);
+  
+    // Check if manuallyAddress is set to true, and accordingly handle locations.
+    if (manuallyAddress_Key === 'true') {
+      const manually = await AsyncStorage.getItem("finalAddress");
+      setManuallyLocation(JSON.parse(manually));
+      setCurrentLocation(''); // Clear currentLocation if manuallyLocation is being used
+    } else {
+      const latitude = await AsyncStorage.getItem("latitude");
+      setCurrentLocation(JSON.parse(latitude));
+      setManuallyLocation(''); // Clear manuallyLocation if currentLocation is being used
+    }
+  };
+
 
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
         <View style={styles.headerLeft}>
-          <Image source={require('../../Icons/locationIcon.png')} />
-          <Text style={styles.headerText_1}>
-            B-22, Veena Nagar, MR-10, Indore
-          </Text>
-          <Image source={require('../../Icons/downArrow.png')} style={{width:12,height:12}}  />
+          <View style={{ justifyContent: 'center' }}>
+            <Image source={require('../../Icons/locationIcon.png')} />
+          </View>
+            <View style={{ justifyContent: 'center' }}>
+                    {manuallyAddress == 'true' ? (
+                      <>
+                        <Text style={styles.headerText_1}>
+                          {manuallyLocation}
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text style={styles.headerText_1}>
+                          {currentLocation.length > 80 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+          <View style={{ justifyContent: 'center' }}>
+            <Image source={require('../../Icons/downArrow.png')} style={{ width: 12, height: 12 }} />
+          </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.iconButton}
-            onPress={() => props.navigation.navigate('NotificationScreen')}>
+            onPress={() => navigation.navigate('NotificationScreen')}>
             <Image source={require('../../Icons/well.png')} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('YourCart')}
-            style={styles.iconButton}>
+          </TouchableOpacity> */}
+          <TouchableOpacity onPress={() => navigation.navigate('YourCart')} style={styles.iconButton}>
             <Image source={require('../../Icons/oderIcon.png')} />
           </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.searchBar}>
-        <Image
-          source={require('../../Icons/searchIcon.png')}
-          style={{ marginVertical: 10 }}
-        />
+
+      {/* <View style={styles.searchBar}>
+        <Image source={require('../../Icons/searchIcon.png')} style={{ marginVertical: 10 }} />
         <TextInput
           placeholder="Search for ‘AC Repair’"
           placeholderTextColor="#00000066"
           style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)} // Update the search query state on text change
         />
-      </View>
+      </View> */}
 
-      <ScrollView>
-        <View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginVertical: 10,
-              marginHorizontal: 10,
-            }}>
-            <Text style={styles.heading1}>AC & Appliance Repair</Text>
-            <Text style={styles.heading2}>See all</Text>
-          </View>
-
-          <View style={styles.sliderList}>
-            <View style={styles.sliderCard}>
-              <FlatList
-                horizontal={true}
-                data={data}
-                renderItem={renderItem_first}
-                keyExtractor={(item) => item.id.toString()}
-              />
-            </View>
-          </View>
-        </View>
-        <View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginVertical: 10,
-              marginHorizontal: 10,
-            }}>
-            <Text style={styles.heading1}>Quick Home Repairs</Text>
-            <Text style={styles.heading2}>See all</Text>
-          </View>
-
-          <View style={styles.sliderList}>
-            <View style={styles.sliderCard}>
-              <FlatList
-                horizontal={true}
-                data={data}
-                renderItem={renderItem_second}
-                keyExtractor={(item) => item.id.toString()}
-              />
-            </View>
-          </View>
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginVertical: 20,
-            marginHorizontal: 10,
-          }}>
-          <Text style={styles.heading1}>Quick Home Repairs</Text>
-          <Text style={styles.heading2}>See all</Text>
-        </View>
-        {/* <View style={styles.sliderCard}>
-          <ImageBackground
-            style={styles.cardBox2}
-            source={require('../../Icons/image7.png')}
-            resizeMode="cover">
-            <LinearGradient
-              colors={['#FFFFFF00', '#FFFFFF00', '#000000']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.linerStyle}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('ServiceDetails')}>
-                <Text style={styles.textCard}>AC Service & Repair</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </ImageBackground>
-          <ImageBackground
-            style={styles.cardBox2}
-            source={require('../../Icons/image7.png')}
-            resizeMode="cover">
-            <LinearGradient
-              colors={['#FFFFFF00', '#FFFFFF00', '#000000']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.linerStyle}>
-              <TouchableOpacity
-                onPress={() => props.navigation.navigate('ServiceDetails')}>
-                <Text style={styles.textCard}>AC Service & Repair</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </ImageBackground>
-          <ImageBackground
-            style={styles.cardBox2}
-            source={require('../../Icons/image7.png')}
-            resizeMode="cover">
-            <LinearGradient
-              colors={['#FFFFFF00', '#FFFFFF00', '#000000']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.linerStyle}>
-              <TouchableOpacity
-                onPress={() => props.navigation.navigate('ServiceDetails')}>
-                <Text style={styles.textCard}>AC Service & Repair</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </ImageBackground>
-          <ImageBackground
-            style={styles.cardBox2}
-            source={require('../../Icons/image7.png')}
-            resizeMode="cover">
-            <LinearGradient
-              colors={['#FFFFFF00', '#FFFFFF00', '#000000']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.linerStyle}>
-              <TouchableOpacity
-                onPress={() => props.navigation.navigate('ServiceDetails')}>
-                <Text style={styles.textCard}>AC Service & Repair</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </ImageBackground>
-        </View> */}
-
+      <ScrollView showsVerticalScrollIndicator={false}>
         <FlatList
-          horizontal={true}
-          data={data}
-          renderItem={renderItem_Third}
+          data={filteredDevices} // Use filteredDevices instead of devicesData
+          renderItem={devicesItem}
           keyExtractor={(item) => item.id.toString()}
         />
-
       </ScrollView>
     </View>
   );
 };
+
 export default ServiceScreen;
+
 const styles = StyleSheet.create({
   mainView: {
     flex: 1,
@@ -300,12 +170,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerText_1: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: 500,
-    lineHeight: 9.6,
+    lineHeight: 9,
     color: '#000000B2',
     marginHorizontal: 5,
-    marginTop: 1,
+    marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',
@@ -340,94 +210,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 600,
     color: '#1C1B1F',
-  },
-  heading2: {
-    fontSize: 12,
-    fontWeight: 400,
-    color: '#FB923C',
-  },
-  text_1: {
-    fontSize: 12,
-    fontWeight: 400,
-    color: '#A09CAB',
-  },
-  serviceRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginHorizontal: 5,
-  },
-  serviceCard: {
-    width: '50%',
-    margin: 5,
-  },
-  card: {
-    height: 72.18,
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-  },
-  cardText: {
-    fontSize: 13,
-    fontWeight: 600,
-    lineHeight: 15.73,
-    marginVertical: 25,
-  },
-  sliderList: {
-    marginVertical: 5,
+    paddingRight: 5,
+    borderBottomWidth: 2,
+    paddingBottom: 2,
+    borderBottomColor: '#FB923C',
   },
   sliderCard: {
-    flexDirection: 'row',
+    height: 200,
+    width: 'auto',
+    marginHorizontal: 5,
+    backgroundColor: '#fff',
+    elevation: 4,
     marginVertical: 10,
-    justifyContent: 'space-between',
-  },
-  cardBox: {
-    width: 86,
-    height: "auto",
-    marginHorizontal: 5,
-  },
-  cardBox2: {
-    width: 86,
-    height: 120,
-    borderRadius: 10,
-    marginHorizontal: 5,
-  },
-  cardText2: {
-    fontSize: 8,
-    fontWeight: 600,
-    lineHeight: 12,
-  },
-  cardNameText: {
-    fontSize: 10,
-    fontWeight: 700,
-    marginBottom: 4,
-    lineHeight: 12,
-    marginTop: 4,
-  },
-  text_3: {
-    fontSize: 12,
-    fontWeight: 800,
-    lineHeight: 24,
-  },
-  text_2: {
-    fontSize: 10,
-    fontWeight: 600,
-    lineHeight: 24,
-  },
-  textCard: {
-    fontSize: 12,
-    fontWeight: 600,
-    lineHeight: 12,
-    color: '#FFFFFF',
-    marginTop: 80,
-    marginHorizontal: 5,
-  },
-  linerStyle: {
-    flex: 1,
-    width: 86,
-    height: 120,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 5,
   },
 });
-
-
+ 

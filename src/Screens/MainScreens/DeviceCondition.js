@@ -31,11 +31,59 @@ const DeviceCondition = ({ route }) => {
     const { time_slot } = route.params;
     //////////////////// Device Condition Get Api /////////////
 
+    const getAllCart = async () => {
+        try {
+          const userData = await AsyncStorage.getItem('access_token');
+          const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    
+          const response = await fetch('http://api.voltrify.in/user/cart', {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json', // Optional, depending on your API requirements
+            },
+          });
+    
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const resData = await response.json();
+          await AsyncStorage.setItem('cartId',resData.data[0].id);
+          console.log(resData.data[0].id);
+        } catch (err) {
+          console.log('get Order err --- ', err);
+        }
+      }; 
+      const getAllAddress = async () => {
+        try {
+          const userData = await AsyncStorage.getItem('access_token');
+          const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    
+          const response = await fetch('http://api.voltrify.in/user/address', {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json', // Optional, depending on your API requirements
+            },
+          });
+    
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const resData = await response.json();
+          await AsyncStorage.setItem('addressId',resData.data[0].id);
+          console.log('address id',resData.data[0].id);
+        } catch (err) {
+          console.log('get Order err --- ', err);
+        }
+      };
 
     useEffect(() => {
         getdeviceCondition();
         console.log(conditionId)
         setdeviceCondition();
+        getAllCart();
+        getAllAddress();
     }, []);
 
     const setdeviceCondition = async () => {

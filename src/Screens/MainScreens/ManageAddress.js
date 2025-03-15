@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   FlatList,
   Alert,
+  ScrollView,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -32,14 +33,40 @@ const ManageAddress = ({ route }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [user_id, setUser_id] = useState([]);
+  const [user_id, setUser_id] = useState('');
   const [addresId, setAddressId] = useState("");
+
+
+  const getProfile_id = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('access_token');
+      const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+      const response = await fetch('http://api.voltrify.in/user', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json', // Optional, depending on your API requirements
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const resData = await response.json();
+      setUser_id(resData.data.id);
+
+    } catch (err) {
+      console.log('get profile err --- ', err);
+    }
+  };
+
+  
 
   const ProfileEdit = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-
       const response = await fetch('http://api.voltrify.in/user/address', {
         method: 'POST',
         headers: {
@@ -48,6 +75,7 @@ const ManageAddress = ({ route }) => {
         },
         // Fields that to be updated are passed
         body: JSON.stringify({
+          user_id: user_id,
           firstName: firstName,
           lastName: lastName,
           phoneNumber: phoneNumber,
@@ -102,6 +130,7 @@ const ManageAddress = ({ route }) => {
 
   useEffect(() => {
     getAllAddress();
+    getProfile_id();
 
   }, []);
 
@@ -124,12 +153,17 @@ const ManageAddress = ({ route }) => {
       const resData = await response.json();
       setData(resData.data);
       setId(JSON.stringify(resData.data.id));
-      Alert.alert(id);
     } catch (err) {
       console.log('get profile err --- ', err);
     }
   };
   console.log('profile', data);
+
+  const seletAddressId = async(id)=>{
+    await AsyncStorage.setItem("addressId", id);
+    console.log("adaa",id)
+    navigation.goBack()
+  }
 
   const renderItem = ({ item }) => (
     <View style={styles.box2}>
@@ -139,10 +173,12 @@ const ManageAddress = ({ route }) => {
           <Image source={require('../../Icons/horizontalIcon.png')} />
         </TouchableOpacity>
       </View>
-      <Text style={styles.boxText4}>
+   <TouchableOpacity onPress={() => seletAddressId(item.id)}>
+   <Text style={styles.boxText4}>
         {item.addressLine1} {item.addressLine2} {item.landmark} {item.city} {item.state} {item.pincode} {'\n'} 
         Ph: +91 {item.phoneNumber} 
-      </Text>
+      </Text> 
+   </TouchableOpacity>
       
       {/* ================= Delete Modal Start ========= */}
       <Modal
@@ -150,7 +186,6 @@ const ManageAddress = ({ route }) => {
         transparent={true}
         visible={popModal}
         onRequestClose={() => {
-          Alert.alert('Modal has been closed.');
           setPopModal(!popModal);
         }}>
         <View style={styles.centeredViewPop}>
@@ -172,96 +207,142 @@ const ManageAddress = ({ route }) => {
 
       {/* ================= Edit Modal Start========= */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          Alert.alert('Modal has been closed.');
-          setModalVisible(!modalVisible);
-        }}>
-        <View style={styles.centeredViewModal}>
-          <View style={styles.modalViewModal}>
-            <TouchableOpacity
-              onPress={() => setModalVisible(!modalVisible)}
-              style={{
-                width: '100%',
-                height: 48,
-                justifyContent: 'center',
-                flexDirection: 'row',
-              }}>
-              <View
-                style={{
-                  width: 32,
-                  height: 4,
-                  borderRadius: 8,
-                  backgroundColor: '#79747E',
-                  alignSelf: 'center',
-                }}></View>
-            </TouchableOpacity>
-            <View style={{ width: '100%', height: 190 }}>
-              <MapView
-                style={{ width: '100%', height: '100%' }}
-                initialRegion={{
-                  latitude: 37.78825,
-                  longitude: -122.4324,
-                  latitudeDelta: 0.0922,
-                  longitudeDelta: 0.0421,
-                }}
-              />
-            </View>
-            <View style={{ paddingHorizontal: 30 }}>
-              <Text style={styles.text_3Modal}>Sagar, Madhya Pradesh</Text>
-              <Text style={styles.text_4Modal}>
-                Krishna Nagar, Makronia, Sagar (M.P.) {'\n'}
-                Ph: +91 1234567890
-              </Text>
-              <View style={styles.input_boxModal}>
-                <TextInput
-                  placeholder="House/Flat Number*"
-                  placeholderTextColor="#A09CAB"
-                  keyboardType="default"
-                  style={styles.text_7Modal}
-                  onChangeText={x => setAddressLine1(x)}
-                  value={addressLine1}
-                />
-              </View>
-              <View style={styles.input_boxModal}>
-                <TextInput
-                  placeholder="Address"
-                  placeholderTextColor="#A09CAB"
-                  keyboardType="default"
-                  style={styles.text_7Modal}
-                  onChangeText={x => setCity(x)}
-                  value={city}
-                />
-              </View>
-              <View style={styles.input_boxModal}>
-                <TextInput
-                  placeholder="Landmark (Optional)"
-                  placeholderTextColor="#A09CAB"
-                  keyboardType="default"
-                  style={styles.text_7Modal}
-                  onChangeText={x => setState(x)}
-                  value={state}
-                />
-              </View>
-              <View style={{ flexDirection: 'row', marginTop: 50 }}>
-                <TouchableOpacity style={styles.btn1Modal}>
-                  <Text style={styles.btnText1Modal}>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.btn2Modal}>
-                  <Text style={styles.btnText2Modal}>Others</Text>
-                </TouchableOpacity>
-              </View>
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(!modalVisible);
+          }}>
+          <View style={styles.centeredViewModal}>
+            <View style={styles.modalViewModal}>
               <TouchableOpacity
-                style={styles.input_box2Modal}
-                onPress={() => ProfileEdit()}>
-                <Text style={styles.text_6Modal}>Save changes</Text>
+                onPress={() => setModalVisible(!modalVisible)}
+                style={{
+                  width: '100%',
+                  height: 48,
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                }}>
+                <View
+                  style={{
+                    width: 32,
+                    height: 4,
+                    borderRadius: 8,
+                    backgroundColor: '#79747E',
+                    alignSelf: 'center',
+                  }}></View>
               </TouchableOpacity>
+              <View style={{ paddingHorizontal: 30, }}>
+                <ScrollView showsVerticalScrollIndicator={false} style={{ height: 450, marginTop: 10, }}>
+                  <View style={[styles.input_boxModal,{marginTop:-30,}]}>
+                    <TextInput
+                      placeholder="First Name"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setFirstName(x)}
+                      value={firstName}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Last Name"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setLastName(x)}
+                      value={lastName}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Address 1"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setAddressLine1(x)}
+                      value={addressLine1}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Phone"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      maxLength={10}
+                      style={styles.text_7Modal}
+                      onChangeText={x => setPhoneNumber(x)}
+                      value={phoneNumber}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Address 2"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setAddressLine2(x)}
+                      value={addressLine2}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="Landmark"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setLandmark(x)}
+                      value={landmark}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="City"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setCity(x)}
+                      value={city}
+                    />
+                  </View>
+                  <View style={styles.input_boxModal}>
+                    <TextInput
+                      placeholder="State"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setState(x)}
+                      value={state}
+                    />
+                  </View>
+                  <View style={[styles.input_boxModal,{marginBottom:40,}]}>
+                    <TextInput
+                      placeholder="Pincode"
+                      placeholderTextColor="#A09CAB"
+                      keyboardType="default"
+                      style={styles.text_7Modal}
+                      onChangeText={x => setPicode(x)}
+                      value={pincode}
+                    />
+                  </View>
+                </ScrollView>
+                {/* <View style={{ flexDirection: 'row', marginTop: 30, }}>
+                  <TouchableOpacity style={styles.btn1Modal}>
+                    <Text style={styles.btnText1Modal}>Home</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.btn2Modal}>
+                    <Text style={styles.btnText2Modal}>Others</Text>
+                  </TouchableOpacity>
+                </View> */}
+                <TouchableOpacity
+                  style={styles.input_box2Modal}
+                  onPress={() => ProfileEdit()}>
+                  <Text style={styles.text_6Modal}>Save changes</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
       {/* ================= Edit Modal End========= */}
     </View>
   );

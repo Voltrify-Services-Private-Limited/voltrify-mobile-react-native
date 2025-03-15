@@ -1,13 +1,16 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, ScrollView, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const OrderScreen = ({ route }) => {
   const navigation = useNavigation();
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState([]); // All orders
+  const [filteredData, setFilteredData] = useState([]); // Filtered orders based on search query
+  const [loading, setLoading] = useState(true); // Loading state for fetching orders
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+
   useEffect(() => {
     getAllOrder();
   }, []);
@@ -21,7 +24,7 @@ const OrderScreen = ({ route }) => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json', // Optional, depending on your API requirements
+          'Content-Type': 'application/json',
         },
       });
 
@@ -30,34 +33,56 @@ const OrderScreen = ({ route }) => {
       }
       const resData = await response.json();
       setData(resData.data);
+      console.log(resData.data);
+      setFilteredData(resData.data); // Initially show all orders
+      setLoading(false); // Set loading to false once data is fetched
     } catch (err) {
       console.log('get Order err --- ', err);
+      setError(err.message);
+      setLoading(false); // Ensure loading is stopped if there's an error
     }
   };
-  console.log('Order', data);
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    // Filter data when there is a search query
+    if (query === '') {
+      setFilteredData(data); // If query is empty, show all orders
+    } else {
+      const filtered = data.filter((order) => {
+        // Safely handle null/undefined values by providing a fallback (empty string)
+        const serviceTypeMatch = (order.service_type?.toLowerCase() || '').includes(query.toLowerCase());
+        const statusMatch = (order.status?.toLowerCase() || '').includes(query.toLowerCase());
+        const userDescMatch = (order.user_description?.toLowerCase() || '').includes(query.toLowerCase());
+
+        return serviceTypeMatch || statusMatch || userDescMatch; // Check if any of the fields match
+      });
+
+      setFilteredData(filtered); // Update filtered data
+    }
+  };
 
   const renderItem_first = ({ item }) => (
     <TouchableOpacity
       style={styles.listCard}
-      onPress={() => navigation.navigate('OrdersDetails',{
-        order_id:item.id,
+      onPress={() => navigation.navigate('OrdersDetails', {
+        order_id: item.id,
+        device_id: item.device_id,
       })}>
       <View style={{ flexDirection: 'row' }}>
-        <Image source={require('../../Icons/oderImage.png')} />
+        <Image
+          source={item.deviceImages?.length > 0
+            ? { uri: item.deviceImages[0] }
+            : require('../../Icons/serviceImage.png')
+          }
+          style={{ width: 100, borderRadius: 10, height: 100 }}
+        />
         <View style={{ marginHorizontal: 5 }}>
-          <Text style={styles.text_2}>{item.service_type}</Text>
-          <Text style={styles.text_1}>
-           {item.user_description}
-          </Text>
-          <View style={{ flexDirection: 'row' }}>
-            <Image source={require('../../Icons/starOder.png')} />
-            <Image source={require('../../Icons/starOder.png')} />
-            <Image source={require('../../Icons/starOder.png')} />
-            <Image source={require('../../Icons/starOder.png')} />
-            <Image source={require('../../Icons/starOder.png')} />
-          </View>
-
-          <Text style={styles.text_3}>Rate this service</Text>
+        <Text style={styles.text_2}>{item.name}</Text>
+        <Text style={styles.text_2}>{item.service_type}</Text>
+          <Text style={styles.text_1}>{item.status}</Text>
+          <Text style={styles.text_3}>Visiting Charge (₹{item.visiting_charge})</Text>
         </View>
       </View>
       <View style={{ justifyContent: 'center' }}>
@@ -80,19 +105,31 @@ const OrderScreen = ({ route }) => {
           placeholder="Search"
           placeholderTextColor="#00000066"
           style={styles.searchInput}
+          value={searchQuery} // Bind the input to the search query state
+          onChangeText={handleSearch} // Trigger handleSearch when the text changes
         />
       </View>
-      <View>
-        <FlatList
-          data={data}
-          renderItem={renderItem_first}
-          keyExtractor={(item) => item.id.toString()}
-        />
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Show loading spinner when data is being fetched */}
+        {loading ? (
+          <ActivityIndicator size="large" color="#FB923C" style={styles.loader} />
+        ) : (
+          <FlatList
+            data={filteredData} // Display filtered data
+            renderItem={renderItem_first}
+            keyExtractor={(item) => item.id.toString()}
+            ListEmptyComponent={<View style={{justifyContent:"center",flex:1,alignItems:"center"}}>
+              <Text style={styles.searchText}>No Orders Found</Text>
+            </View>} // Show a message when no orders match
+          />
+        )}
+      </ScrollView>
     </View>
   );
 };
+
 export default OrderScreen;
+
 const styles = StyleSheet.create({
   mainView: {
     flex: 1,
@@ -120,16 +157,6 @@ const styles = StyleSheet.create({
     width: '90%',
     lineHeight: 14.4,
   },
-  heading1: {
-    fontSize: 16,
-    fontWeight: 600,
-    color: '#1C1B1F',
-  },
-  heading2: {
-    fontSize: 12,
-    fontWeight: 400,
-    color: '#FB923C',
-  },
   headerText: {
     textAlign: 'center',
     fontSize: 18,
@@ -150,6 +177,7 @@ const styles = StyleSheet.create({
     fontWeight: 500,
     color: '#A09CAB',
     lineHeight: 16,
+    textTransform:'capitalize',
   },
   text_2: {
     fontSize: 12,
@@ -158,10 +186,21 @@ const styles = StyleSheet.create({
     lineHeight: 14.4,
   },
   text_3: {
-    fontSize: 9,
-    fontWeight: 400,
-    color: '#1C1B1F',
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#000',
   },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  searchText:{
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 700,
+    color: '#FB923C',
+    marginTop:'50%',
+  }
 });
-
-

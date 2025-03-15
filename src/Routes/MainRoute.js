@@ -22,6 +22,11 @@ import CategoriseDetails from '../Screens/MainScreens/CategoriseDetails';
 import DeviceCondition from '../Screens/MainScreens/DeviceCondition';
 import PaymentCard from '../Screens/MainScreens/PaymentCard';
 import EditOrder from '../Screens/MainScreens/EditOrder';
+import OrderVerify from '../Screens/MainScreens/OrderVerify';
+import CancleOrder from '../Screens/MainScreens/CancleOrder';
+import BottomNavigation from './BottomNavigation';
+import SelectAddress from '../Screens/MainScreens/SelectAddress';
+import SupportContact from '../Screens/MainScreens/SupportContact';
 
 
 // ------ screens -----\\
@@ -34,8 +39,8 @@ const Mainroute = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName="BottomTab">
-      <authstack.Screen name="BottomTab" component={BottomTab} />
+      initialRouteName="BottomNavigation">
+      <authstack.Screen name="BottomNavigation" component={BottomNavigation} />
       <authstack.Screen name="YourCart" component={YourCart} />
       <authstack.Screen name="OrdersDetails" component={OrdersDetails} />
       <authstack.Screen name="ServiceDetails" component={ServiceDetails} />
@@ -55,6 +60,10 @@ const Mainroute = () => {
       <authstack.Screen name="DeviceCondition" component={DeviceCondition} />
       <authstack.Screen name="PaymentCard" component={PaymentCard} />
       <authstack.Screen name="EditOrder" component={EditOrder} />
+      <authstack.Screen name="OrderVerify" component={OrderVerify} />
+      <authstack.Screen name="CancleOrder" component={CancleOrder} />
+      <authstack.Screen name="SelectAddress" component={SelectAddress} />
+      <authstack.Screen name="SupportContact" component={SupportContact} />
     </authstack.Navigator>
   );
 };
