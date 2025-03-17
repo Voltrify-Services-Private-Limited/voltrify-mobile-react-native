@@ -18,9 +18,6 @@ const PaymentScreen = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [number, setNumber] = useState('');
   const [address_id, setAddress_id] = useState('a3163034-c326-4a68-ac9e-ce203b206180');
-  const [payment_id, setPayment_id] = useState('')
-  const [OrderId, setOrderId] = useState('')
-  const [signatureKey, setSignatureKey] = useState('')
   const { order_id } = route.params;
 
   ////////////// Payment Methods ///////////////
@@ -30,16 +27,18 @@ const PaymentScreen = ({ route }) => {
     const phoneNumber = await AsyncStorage.getItem('userNumber');
     const userEmail = await AsyncStorage.getItem('userEmail');
     const price = await AsyncStorage.getItem('final_price');
+    console.log("price", price);  
+    
     const finalPrice = JSON.parse(price);
     console.log("asassasaa", finalPrice);
     const options = {
       order_id: order_id,
       description: 'Credits towards consultation',
-      image: 'https://i.imgur.com/3g7nmJC.png',
+      image: 'https://voltrify.in/assets/vortrify_icon-d6LRgtxi.png',
       currency: currency,
       key: RAZORPAY_KEY,
       amount: finalPrice * 100,
-      name: 'Voltrify',
+      name: 'Voltrify services pvt ltd',
       prefill: {
         email: userEmail,
         contact: phoneNumber,
@@ -47,13 +46,10 @@ const PaymentScreen = ({ route }) => {
       },
       theme: { color: '#F37254' }
     }
+    
     RazorpayCheckout.open(options).then((data) => {
-      // Handle success here
-      setPayment_id(data.razorpay_payment_id);
-      setOrderId(data.razorpay_order_id);
-      setPayment_id(data.razorpay_signature);
       // data.signature, data.paymentId, and data.orderId can be used for further verification.
-      VerifyOrder();
+      VerifyOrder(data.razorpay_payment_id, data.razorpay_order_id, data.razorpay_signature);
       navigation.navigate('OrderVerify', { order_id: order_id });
     })
       .catch((error) => {
@@ -63,14 +59,15 @@ const PaymentScreen = ({ route }) => {
   }
 
 
-  const VerifyOrder = async () => {
+  const VerifyOrder = async (paymentId, orderId, signatureKey) => {
     const url = 'http://api.voltrify.in/payment/verify';
+    
     result = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        razorpay_order_id: OrderId,
-        razorpay_payment_id: payment_id,
+        razorpay_order_id: orderId,
+        razorpay_payment_id: paymentId,
         razorpay_signature: signatureKey,
       }),
     });
@@ -85,8 +82,6 @@ const PaymentScreen = ({ route }) => {
     } else (
       console.log('Order Verify', response)
     )
-
-
   };
 
 

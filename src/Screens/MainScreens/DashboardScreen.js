@@ -17,11 +17,13 @@ const DashboardScreen = ({ route }) => {
   const [manuallyAddress, setManuallyAddress] = useState('false');
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1); // Keep track of the current page
+  const [totalServices, setTotalServices] = useState(0);
+  const [totalPages, setTotalPages] = useState(null);
+
 
   const navigation = useNavigation();
 
   useEffect(() => {
-    getAllService();
     getAllCategorise();
     getAllDevices();
     refreshTokenApi();
@@ -29,6 +31,11 @@ const DashboardScreen = ({ route }) => {
     Manually_and_enable();
   }, []);
 
+  // Trigger API call when `page` updates
+  useEffect(() => {
+    getAllService(page);
+  }, [page]);
+  
   const handleRefersh = async () => {
     setIsRefersh(true);
 
@@ -89,14 +96,18 @@ const DashboardScreen = ({ route }) => {
   
   ////////////////// Services Api Call Start ////////////////
   const getAllService = async (page = 1) => {
+    console.log("invocking");
+    
+    if (totalPages !== null && page > totalPages) return;
     if (loading) return; // Prevent multiple simultaneous requests
     setLoading(true);
 
     try {
       const userData = await AsyncStorage.getItem('access_token');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-
-      const response = await fetch(`http://api.voltrify.in/service?page=${page}&limit=10`, { // Add pagination params
+      console.log(`http://api.voltrify.in/service?pageNo=${page}&recordsPerPage=10`);
+      
+      const response = await fetch(`http://api.voltrify.in/service?pageNo=${page}&recordsPerPage=10`, { // Add pagination params
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -109,7 +120,9 @@ const DashboardScreen = ({ route }) => {
       }
 
       const resData = await response.json();
-      
+      // Calculate total pages dynamically
+      const calculatedTotalPages = Math.ceil(resData.totalRecords / 10);
+      if (!totalPages) setTotalPages(calculatedTotalPages);
       setServiceData((prevData) => [...prevData, ...resData.data]); // Append new data
     } catch (err) {
       console.log('Service Data err --- ', err);
@@ -333,13 +346,13 @@ const DashboardScreen = ({ route }) => {
             {manuallyAddress == 'true' ? (
               <>
                 <Text style={styles.headerText_1}>
-                {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
+                {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 50)}...` : manuallyLocation}
                 </Text>
               </>
             ) : (
               <>
                 <Text style={styles.headerText_1}>
-                  {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                  {currentLocation.length > 75 ? `${currentLocation.substring(0, 50)}...` : currentLocation}
                 </Text>
               </>
             )}
@@ -420,9 +433,8 @@ const DashboardScreen = ({ route }) => {
             renderItem={serviceItem}
             keyExtractor={(item) => item.id.toString()}
             onEndReached={() => {
-              if (!loading) {
+              if (!loading && page < totalPages) {
                 setPage(prevPage => prevPage + 1); // Increment page number when the end is reached
-                getAllService(page + 1); // Fetch the next page
               }
             }}
             onEndReachedThreshold={0.5} // Trigger when the list is 50% from the end

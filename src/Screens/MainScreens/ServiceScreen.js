@@ -103,13 +103,13 @@ const ServiceScreen = ({ route }) => {
                     {manuallyAddress == 'true' ? (
                       <>
                         <Text style={styles.headerText_1}>
-                        {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
+                        {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 50)}...` : manuallyLocation}
                         </Text>
                       </>
                     ) : (
                       <>
                         <Text style={styles.headerText_1}>
-                          {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                          {currentLocation.length > 75 ? `${currentLocation.substring(0, 50)}...` : currentLocation}
                         </Text>
                       </>
                     )}

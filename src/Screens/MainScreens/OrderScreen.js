@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, S
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 const OrderScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -11,12 +13,16 @@ const OrderScreen = ({ route }) => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
-  useEffect(() => {
-    getAllOrder();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getAllOrder();
+    }, [])
+  );
 
   const getAllOrder = async () => {
     try {
+      console.log('get Orders');
+      
       const userData = await AsyncStorage.getItem('access_token');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
 
