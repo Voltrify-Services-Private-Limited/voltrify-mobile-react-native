@@ -103,20 +103,17 @@ const ServiceScreen = ({ route }) => {
                     {manuallyAddress == 'true' ? (
                       <>
                         <Text style={styles.headerText_1}>
-                          {manuallyLocation}
+                        {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
                         </Text>
                       </>
                     ) : (
                       <>
                         <Text style={styles.headerText_1}>
-                          {currentLocation.length > 80 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                          {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
                         </Text>
                       </>
                     )}
                   </View>
-          <View style={{ justifyContent: 'center' }}>
-            <Image source={require('../../Icons/downArrow.png')} style={{ width: 12, height: 12 }} />
-          </View>
         </View>
         <View style={styles.headerRight}>
           {/* <TouchableOpacity

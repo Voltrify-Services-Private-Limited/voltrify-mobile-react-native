@@ -116,7 +116,7 @@ const DeviceCondition = ({ route }) => {
     };
 
     const paymentBtn = async() => {
-        navigation.navigate("PaymentScreen", { condition_Id: conditionId});
+        navigation.navigate("SelectAddress", { condition_Id: conditionId});
         await AsyncStorage.setItem('timeSlot', JSON.stringify(time_slot));
     }
     return (

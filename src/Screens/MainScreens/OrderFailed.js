@@ -10,24 +10,24 @@ import {
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-const CancleOrder = ({ route }) => {
-     const navigation = useNavigation();
-      useEffect(() => {
-            // Hide splash screen after 2 seconds and navigate to HomeScreen
-            const timer = setTimeout(() => {
-              navigation.navigate('BottomTab'); // Navigate to Home screen
-            }, 2000);
-        
-            return () => clearTimeout(timer);
-          }, []);
-    
-     return (
+const OrderFailed = ({ route }) => {
+    const navigation = useNavigation();
+    useEffect(() => {
+        // Hide splash screen after 2 seconds and navigate to HomeScreen
+        const timer = setTimeout(() => {
+            navigation.navigate('BottomTab'); // Navigate to Home screen
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    return (
         <View style={styles.mainView}>
             <View style={styles.topView}>
                 <View style={styles.check_circle}>
                     <Image source={require('../../Icons/failed.png')} style={{ width: 100, height: 100, }} />
                 </View>
-                <Text style={styles.orderText}>Your Order Cancle</Text>
+                <Text style={styles.orderText}>Payment verification failed</Text>
             </View>
         </View>
     );
@@ -125,4 +125,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default CancleOrder;
+export default OrderFailed;

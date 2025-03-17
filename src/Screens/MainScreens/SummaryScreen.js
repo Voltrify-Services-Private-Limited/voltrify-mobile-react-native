@@ -454,18 +454,17 @@ const SummaryScreen = ({ route }) => {
                   {manuallyAddress == 'true' ? (
                     <>
                       <Text style={styles.headerText_1}>
-                        {manuallyLocation}
+                      {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
                       </Text>
                     </>
                   ) : (
                     <>
                       <Text style={styles.headerText_1}>
-                        {currentLocation.length > 80 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                        {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
                       </Text>
                     </>
                   )}
                 </View>
-                <Image source={require('../../Icons/downArrow.png')} style={{ width: 12, height: 12 }} />
               </View>
               <Text style={{ fontSize: 12, fontWeight: 600, lineHeight: 14.4, color: "#1C1B1F" }}>When should the professional arrive?</Text>
               <Text style={{ fontSize: 10, lineHeight: 15, fontWeight: 400, color: "#A09CAB" }}>Your service will take approx. 40 Mins</Text>
@@ -549,13 +548,13 @@ const SummaryScreen = ({ route }) => {
                 {manuallyAddress == 'true' ? (
                   <>
                     <Text style={styles.headerText_1}>
-                      {manuallyLocation}
+                    {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
                     </Text>
                   </>
                 ) : (
                   <>
                     <Text style={styles.headerText_1}>
-                      {currentLocation.length > 80 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                      {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
                     </Text>
                   </>
                 )}
@@ -563,17 +562,16 @@ const SummaryScreen = ({ route }) => {
               </Text>
             </View>
             <View style={{ justifyContent: 'center' }}>
-              <Image source={require('../../Icons/downArrow.png')} style={{ width: 12, height: 12 }} />
             </View>
           </View>
-          <View style={styles.headerRight}>
+          {/* <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => navigation.navigate('SelectAddress')}>
               <Image source={require('../../Icons/edit.png')} />
             </TouchableOpacity>
 
-          </View>
+          </View> */}
         </View>
         {isVisible ? <TouchableOpacity style={styles.buttonBottom} onPress={() => paymentBtn()}>
           <Text style={styles.buttonText}>Proceed to pay </Text>
@@ -795,7 +793,7 @@ const styles = StyleSheet.create({
   bottomView: {
     width: '100%',
     position: 'absolute',
-    height: 120,
+    height: 130,
     bottom: 0,
     backgroundColor: '#FFFFFF',
     elevation: 5,
@@ -838,6 +836,7 @@ const styles = StyleSheet.create({
   topHeader2: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginVertical:10,
   },
 
   headerLeft: {

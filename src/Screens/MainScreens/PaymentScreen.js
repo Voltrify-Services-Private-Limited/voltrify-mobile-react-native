@@ -18,25 +18,27 @@ const PaymentScreen = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [number, setNumber] = useState('');
   const [address_id, setAddress_id] = useState('a3163034-c326-4a68-ac9e-ce203b206180');
-  const { condition_Id } = route.params;
-  const [payment_id ,setPayment_id] = useState('')
-  const [paymentOrderId ,setPaymentOrderId] = useState('')
+  const [payment_id, setPayment_id] = useState('')
+  const [OrderId, setOrderId] = useState('')
+  const [signatureKey, setSignatureKey] = useState('')
+  const { order_id } = route.params;
 
   ////////////// Payment Methods ///////////////
-  const currency = 'INR'; 
+  const currency = 'INR';
   const paymentHandle = async () => {
     const userName = await AsyncStorage.getItem('userName');
     const phoneNumber = await AsyncStorage.getItem('userNumber');
     const userEmail = await AsyncStorage.getItem('userEmail');
     const price = await AsyncStorage.getItem('final_price');
     const finalPrice = JSON.parse(price);
+    console.log("asassasaa", finalPrice);
     const options = {
-      orderId: paymentOrderId ,
+      order_id: order_id,
       description: 'Credits towards consultation',
       image: 'https://i.imgur.com/3g7nmJC.png',
       currency: currency,
       key: RAZORPAY_KEY,
-      amount: finalPrice*100,
+      amount: finalPrice * 100,
       name: 'Voltrify',
       prefill: {
         email: userEmail,
@@ -47,89 +49,46 @@ const PaymentScreen = ({ route }) => {
     }
     RazorpayCheckout.open(options).then((data) => {
       // Handle success here
-      setPayment_id(JSON.stringify(data));
-      console.log('Payment success:', data);
+      setPayment_id(data.razorpay_payment_id);
+      setOrderId(data.razorpay_order_id);
+      setPayment_id(data.razorpay_signature);
       // data.signature, data.paymentId, and data.orderId can be used for further verification.
       VerifyOrder();
-      navigation.navigate('OrderVerify',{order_id:paymentOrderId});
+      navigation.navigate('OrderVerify', { order_id: order_id });
     })
-    .catch((error) => {
-      // Handle failure here
-      console.log('Payment failed:', error);
-    });
+      .catch((error) => {
+        // Handle failure here
+        console.log('Payment failed:', error);
+      });
   }
-  
-  
+
+
   const VerifyOrder = async () => {
-    // const razorpayPayment = JSON.parse(payment_id);
-    // const reqBody = JSON.stringify({
-    //   razorpay_order_id: paymentOrderId,
-    //   razorpay_payment_id: razorpayPayment,
-    //   razorpay_signature: "1a3b5c6d7e8f9g0h1i2j3k4l5m6n7o8p",
-    // })
-    // console.log("req payment body:", reqBody);
     const url = 'http://api.voltrify.in/payment/verify';
     result = await fetch(url, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        razorpay_order_id: paymentOrderId,
-        razorpay_payment_id: razorpayPayment,
-        razorpay_signature: "1a3b5c6d7e8f9g0h1i2j3k4l5m6n7o8p",
+        razorpay_order_id: OrderId,
+        razorpay_payment_id: payment_id,
+        razorpay_signature: signatureKey,
       }),
     });
 
     response = await result.json();
     console.log('Order Verify', response);
-    Alert.alert("Order Verify === ",JSON.stringify(response));
-   
+
+    if (response.message == 'Payment verification failed') {
+      navigation.navigate('OrderFailed');
+    } else if (response.message == 'Payment verification successfully') {
+      navigation.navigate('OrderVerify');
+    } else (
+      console.log('Order Verify', response)
+    )
+
+
   };
 
-    useEffect(() => {
-    createOrder(); 
-    }, []);
-  const createOrder = async () => {
-    const userData = await AsyncStorage.getItem('access_token');
-    const coupons_code = await AsyncStorage.getItem('coupanCode');
-    const service_description = await AsyncStorage.getItem('service_description');
-    const timeSlot = await AsyncStorage.getItem('time_slot');
-    const dateSlot = await AsyncStorage.getItem('slot_no_day');
-    const cart_id = await AsyncStorage.getItem('cartId');
-    const address = await AsyncStorage.getItem('addressId');
-    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-    const time = JSON.parse(timeSlot);
-    const date = JSON.parse(dateSlot);
-    const url = 'http://api.voltrify.in/user/orders';
-    result = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json', // Optional, depending on your API requirements
-      },
-      body: JSON.stringify({
-        cart_id: cart_id,
-        address_id: address,
-        condition_id: condition_Id,
-        time_slot: time ,
-        coupons_code: coupons_code,
-        payment_mode: "online",
-        service_description: service_description,
-        date: date,
-      }),
-    });
-    console.log('======', time + coupons_code + service_description + condition_Id + "cart Id", cart_id + address_id)
-    response = await result.json();
-    console.log('order data========', response);
-    setPaymentOrderId(response.data.payment_order_id);
-    console.log("paymentOrderId", paymentOrderId);
-    await AsyncStorage.setItem("orderId",paymentOrderId);
-    // Alert.alert(JSON.stringify(response));
-  };
-
-  const OrderCreate = () =>{
-    // createOrder();
-    paymentHandle();
-  }
 
   return (
     <View style={styles.mainView}>
@@ -144,78 +103,15 @@ const PaymentScreen = ({ route }) => {
       <View>
         <View style={{ marginVertical: 5 }}>
           <Text style={styles.text_1}>Debit or Credit Card</Text>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <TouchableOpacity onPress={() => paymentHandle()}>
             <View style={styles.paymentList}>
               <View style={{ flexDirection: 'row' }}>
                 <Image source={require('../../Icons/debit.png')} />
-                <Text style={styles.text_2}>Add a card</Text>
+                <Text style={styles.text_2}>Payment Checkout</Text>
               </View>
               <Image source={require('../../Icons/rightArrow.png')} />
             </View>
           </TouchableOpacity>
-        </View>
-        <View style={{ marginVertical: 5 }}>
-          <Text style={styles.text_1}>Wallet</Text>
-          <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/paytm.png')} />
-              <Text style={styles.text_2}>Paytm</Text>
-            </View>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
-          <View style={styles.paymentList}>
-            <TouchableOpacity onPress={() => OrderCreate()}>
-              <View style={{ flexDirection: 'row' }}>
-                <Image source={require('../../Icons/phonePe.png')} />
-                <Text style={styles.text_2}>Phone Pe</Text>
-              </View>
-            </TouchableOpacity>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
-          <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/googlePe.png')} />
-              <Text style={styles.text_2}>Google Pe</Text>
-            </View>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
-        </View>
-        <View style={{ marginVertical: 5 }}>
-          <Text style={styles.text_1}>UPI</Text>
-          <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/upi.png')} />
-              <Text style={styles.text_2}>Pay via UPI ID</Text>
-            </View>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
-        </View>
-        <View style={{ marginVertical: 5 }}>
-          <Text style={styles.text_1}>Net Banking</Text>
-          <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/bank.png')} />
-              <Text style={styles.text_2}>See all banks</Text>
-            </View>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
-        </View>
-        <View style={{ marginVertical: 5 }}>
-          <Text style={styles.text_1}>Pay after service</Text>
-          <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/onlinePe.png')} />
-              <Text style={styles.text_2}>Pay online after service</Text>
-            </View>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
-          <View style={styles.paymentList}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={require('../../Icons/cashPe.png')} />
-              <Text style={styles.text_2}>Pay cash after service</Text>
-            </View>
-            <Image source={require('../../Icons/rightArrow.png')} />
-          </View>
         </View>
       </View>
       <Modal

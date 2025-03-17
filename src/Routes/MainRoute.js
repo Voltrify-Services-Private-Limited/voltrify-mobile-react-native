@@ -27,6 +27,7 @@ import CancleOrder from '../Screens/MainScreens/CancleOrder';
 import BottomNavigation from './BottomNavigation';
 import SelectAddress from '../Screens/MainScreens/SelectAddress';
 import SupportContact from '../Screens/MainScreens/SupportContact';
+import OrderFailed from '../Screens/MainScreens/OrderFailed';
 
 
 // ------ screens -----\\
@@ -64,6 +65,7 @@ const Mainroute = () => {
       <authstack.Screen name="CancleOrder" component={CancleOrder} />
       <authstack.Screen name="SelectAddress" component={SelectAddress} />
       <authstack.Screen name="SupportContact" component={SupportContact} />
+      <authstack.Screen name="OrderFailed" component={OrderFailed} />
     </authstack.Navigator>
   );
 };

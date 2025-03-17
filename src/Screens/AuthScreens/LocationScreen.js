@@ -21,6 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import GoogleMap from '../../Component/GoogleMap';
 import ModalComponent from '../../Component/AddressModal';
 import { GOOGLE_KEY } from '../../EnvFolder/env';
+import CustomModal from '../../Component/CustomModal';
 // import Geolocation from '@react-native-community/geolocation'; // For location
 // import Geocoding from 'react-native-geocoding'; // For reverse geocoding
 // import { PermissionsAndroid } from 'react-native'; // For requesting location permission on Android
@@ -29,6 +30,7 @@ const LocationScreen = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [locationModal, setLocationModal] = useState(false);
+  const [customModal, setCustomModal] = useState(false);
   const [addressLine2, setAddressLine2] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [landmark, setLandmark] = useState('');
@@ -196,6 +198,7 @@ const LocationScreen = ({ route }) => {
 
   const setLocationLogin = async () => {
     getCurrentPosition();
+    setCustomModal(true);
     await AsyncStorage.setItem('latitude', JSON.stringify(UserAddress));
     
   }
@@ -241,7 +244,7 @@ const LocationScreen = ({ route }) => {
 
 
         <ModalComponent visible={locationModal} onClose={() => LocationFrom()} />
-
+        <CustomModal visible={customModal} onClose={() => setCustomModal(false)}/>
 
         <Text style={styles.text_3}>Enable Location </Text>
         <Text style={styles.text_4}>

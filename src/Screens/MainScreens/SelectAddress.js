@@ -35,6 +35,8 @@ const SelectAddress = ({ route }) => {
   const [error, setError] = useState(null);
   const [user_id, setUser_id] = useState('');
   const [addresId, setAddressId] = useState("");
+  const { condition_Id } = route.params;
+  const [selectedIndex, setSelectedIndex] = useState(null);
 
 
   const getProfile_id = async () => {
@@ -61,7 +63,7 @@ const SelectAddress = ({ route }) => {
     }
   };
 
-  
+
 
   const ProfileEdit = async () => {
     try {
@@ -124,7 +126,7 @@ const SelectAddress = ({ route }) => {
       console.log('Error', 'An error occurred while deleting the item');
     }
 
-   setPopModal(!popModal);
+    setPopModal(!popModal);
 
   };
 
@@ -134,11 +136,47 @@ const SelectAddress = ({ route }) => {
 
   }, []);
 
+  const createOrder = async () => {
+    const userData = await AsyncStorage.getItem('access_token');
+    const coupons_code = await AsyncStorage.getItem('coupanCode');
+    const service_description = await AsyncStorage.getItem('service_description');
+    const timeSlot = await AsyncStorage.getItem('time_slot');
+    const dateSlot = await AsyncStorage.getItem('slot_no_day');
+    const cart_id = await AsyncStorage.getItem('cartId');
+    const address = await AsyncStorage.getItem('addressId');
+    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
+    const time = JSON.parse(timeSlot);
+    const date = JSON.parse(dateSlot);
+    const url = 'http://api.voltrify.in/user/orders';
+    result = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', // Optional, depending on your API requirements
+      },
+      body: JSON.stringify({
+        cart_id: cart_id,
+        address_id: addresId,
+        condition_id: condition_Id,
+        time_slot: time,
+        coupons_code: coupons_code,
+        payment_mode: "online",
+        service_description: service_description,
+        date: date,
+      }),
+    });
+    response = await result.json();
+    console.log('order data========', response);
+    navigation.navigate('PaymentScreen',{order_id: response.data.payment_order_id});
+    // Alert.alert(JSON.stringify(response));
+  };
+
+
   const getAllAddress = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-
+      await AsyncStorage.setItem('conditionId', condition_Id);
       const response = await fetch('http://api.voltrify.in/user/address', {
         method: 'GET',
         headers: {
@@ -159,193 +197,200 @@ const SelectAddress = ({ route }) => {
   };
   console.log('profile', data);
 
-  const seletAddressId = async(id)=>{
+  const seletAddressId = async (id) => {
     await AsyncStorage.setItem("addressId", id);
-    console.log("adaa",id)
-    navigation.goBack()
+    setAddressId(id);
+    console.log("adaa", id)
   }
 
-  const renderItem = ({ item }) => (
-    <View style={styles.box2}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={styles.boxText3}>Home</Text>
-        <TouchableOpacity onPress={() => setPopModal(true)}>
-          <Image source={require('../../Icons/horizontalIcon.png')} />
+  const handleSelectItem = (index) => {
+    setSelectedIndex(index); // Set the selected index to change the background color
+  };
+
+  const renderItem = ({ item, index }) => {
+    const borderColor = index === selectedIndex ? '#1fc435' : '#FB923C';
+ return(
+  <View style={[styles.box2,{borderColor:borderColor}]}>
+  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+    <Text style={styles.boxText3}>Home</Text>
+    <TouchableOpacity onPress={() => setPopModal(true)}>
+      <Image source={require('../../Icons/horizontalIcon.png')} />
+    </TouchableOpacity>
+  </View>
+  <TouchableOpacity onPress={() => {seletAddressId(item.id),handleSelectItem(index)}}>
+    <Text style={styles.boxText4}>
+      {item.addressLine1} {item.addressLine2} {item.landmark} {item.city} {item.state} {item.pincode} {'\n'}
+      Ph: +91 {item.phoneNumber}
+    </Text>
+  </TouchableOpacity>
+
+  {/* ================= Delete Modal Start ========= */}
+  <Modal
+    animationType="none"
+    transparent={true}
+    visible={popModal}
+    onRequestClose={() => {
+      setPopModal(!popModal);
+    }}>
+    <View style={styles.centeredViewPop}>
+      <View style={styles.modalViewPop}>
+        <TouchableOpacity
+          style={[styles.buttonPop, styles.buttonClosePop]}
+          onPress={() => setPopModal(!popModal)}>
+          <Text style={styles.textStylePop}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.buttonPop, styles.buttonClosePop]}
+          onPress={() => deleteAddress(item.id)}>
+          <Text style={styles.textStylePop}>Delete</Text>
         </TouchableOpacity>
       </View>
-   <TouchableOpacity onPress={() => seletAddressId(item.id)}>
-   <Text style={styles.boxText4}>
-        {item.addressLine1} {item.addressLine2} {item.landmark} {item.city} {item.state} {item.pincode} {'\n'} 
-        Ph: +91 {item.phoneNumber} 
-      </Text> 
-   </TouchableOpacity>
-      
-      {/* ================= Delete Modal Start ========= */}
-      <Modal
-        animationType="none"
-        transparent={true}
-        visible={popModal}
-        onRequestClose={() => {
-          setPopModal(!popModal);
-        }}>
-        <View style={styles.centeredViewPop}>
-          <View style={styles.modalViewPop}>
-            <TouchableOpacity
-              style={[styles.buttonPop, styles.buttonClosePop]}
-              onPress={() => setPopModal(!popModal)}>
-              <Text style={styles.textStylePop}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.buttonPop, styles.buttonClosePop]}
-              onPress={() => deleteAddress(item.id)}>
-              <Text style={styles.textStylePop}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      {/* ================= Delete Modal End ========= */}
-
-      {/* ================= Edit Modal Start========= */}
-      <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(!modalVisible);
-          }}>
-          <View style={styles.centeredViewModal}>
-            <View style={styles.modalViewModal}>
-              <TouchableOpacity
-                onPress={() => setModalVisible(!modalVisible)}
-                style={{
-                  width: '100%',
-                  height: 48,
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                }}>
-                <View
-                  style={{
-                    width: 32,
-                    height: 4,
-                    borderRadius: 8,
-                    backgroundColor: '#79747E',
-                    alignSelf: 'center',
-                  }}></View>
-              </TouchableOpacity>
-              <View style={{ paddingHorizontal: 30, }}>
-                <ScrollView showsVerticalScrollIndicator={false} style={{ height: 450, marginTop: 10, }}>
-                  <View style={[styles.input_boxModal,{marginTop:-30,}]}>
-                    <TextInput
-                      placeholder="First Name"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setFirstName(x)}
-                      value={firstName}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Last Name"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setLastName(x)}
-                      value={lastName}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Address 1"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setAddressLine1(x)}
-                      value={addressLine1}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Phone"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      maxLength={10}
-                      style={styles.text_7Modal}
-                      onChangeText={x => setPhoneNumber(x)}
-                      value={phoneNumber}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Address 2"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setAddressLine2(x)}
-                      value={addressLine2}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="Landmark"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setLandmark(x)}
-                      value={landmark}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="City"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setCity(x)}
-                      value={city}
-                    />
-                  </View>
-                  <View style={styles.input_boxModal}>
-                    <TextInput
-                      placeholder="State"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setState(x)}
-                      value={state}
-                    />
-                  </View>
-                  <View style={[styles.input_boxModal,{marginBottom:40,}]}>
-                    <TextInput
-                      placeholder="Pincode"
-                      placeholderTextColor="#A09CAB"
-                      keyboardType="default"
-                      style={styles.text_7Modal}
-                      onChangeText={x => setPicode(x)}
-                      value={pincode}
-                    />
-                  </View>
-                </ScrollView>
-                {/* <View style={{ flexDirection: 'row', marginTop: 30, }}>
-                  <TouchableOpacity style={styles.btn1Modal}>
-                    <Text style={styles.btnText1Modal}>Home</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.btn2Modal}>
-                    <Text style={styles.btnText2Modal}>Others</Text>
-                  </TouchableOpacity>
-                </View> */}
-                <TouchableOpacity
-                  style={styles.input_box2Modal}
-                  onPress={() => ProfileEdit()}>
-                  <Text style={styles.text_6Modal}>Save changes</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      {/* ================= Edit Modal End========= */}
     </View>
-  );
+  </Modal>
+  {/* ================= Delete Modal End ========= */}
+
+  {/* ================= Edit Modal Start========= */}
+  <Modal
+    animationType="slide"
+    transparent={true}
+    visible={modalVisible}
+    onRequestClose={() => {
+      setModalVisible(!modalVisible);
+    }}>
+    <View style={styles.centeredViewModal}>
+      <View style={styles.modalViewModal}>
+        <TouchableOpacity
+          onPress={() => setModalVisible(!modalVisible)}
+          style={{
+            width: '100%',
+            height: 48,
+            justifyContent: 'center',
+            flexDirection: 'row',
+          }}>
+          <View
+            style={{
+              width: 32,
+              height: 4,
+              borderRadius: 8,
+              backgroundColor: '#79747E',
+              alignSelf: 'center',
+            }}></View>
+        </TouchableOpacity>
+        <View style={{ paddingHorizontal: 30, }}>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ height: 450, marginTop: 10, }}>
+            <View style={[styles.input_boxModal, { marginTop: -30, }]}>
+              <TextInput
+                placeholder="First Name"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setFirstName(x)}
+                value={firstName}
+              />
+            </View>
+            <View style={styles.input_boxModal}>
+              <TextInput
+                placeholder="Last Name"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setLastName(x)}
+                value={lastName}
+              />
+            </View>
+            <View style={styles.input_boxModal}>
+              <TextInput
+                placeholder="Address 1"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setAddressLine1(x)}
+                value={addressLine1}
+              />
+            </View>
+            <View style={styles.input_boxModal}>
+              <TextInput
+                placeholder="Phone"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                maxLength={10}
+                style={styles.text_7Modal}
+                onChangeText={x => setPhoneNumber(x)}
+                value={phoneNumber}
+              />
+            </View>
+            <View style={styles.input_boxModal}>
+              <TextInput
+                placeholder="Address 2"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setAddressLine2(x)}
+                value={addressLine2}
+              />
+            </View>
+            <View style={styles.input_boxModal}>
+              <TextInput
+                placeholder="Landmark"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setLandmark(x)}
+                value={landmark}
+              />
+            </View>
+            <View style={styles.input_boxModal}>
+              <TextInput
+                placeholder="City"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setCity(x)}
+                value={city}
+              />
+            </View>
+            <View style={styles.input_boxModal}>
+              <TextInput
+                placeholder="State"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setState(x)}
+                value={state}
+              />
+            </View>
+            <View style={[styles.input_boxModal, { marginBottom: 40, }]}>
+              <TextInput
+                placeholder="Pincode"
+                placeholderTextColor="#A09CAB"
+                keyboardType="default"
+                style={styles.text_7Modal}
+                onChangeText={x => setPicode(x)}
+                value={pincode}
+              />
+            </View>
+          </ScrollView>
+          {/* <View style={{ flexDirection: 'row', marginTop: 30, }}>
+              <TouchableOpacity style={styles.btn1Modal}>
+                <Text style={styles.btnText1Modal}>Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btn2Modal}>
+                <Text style={styles.btnText2Modal}>Others</Text>
+              </TouchableOpacity>
+            </View> */}
+          <TouchableOpacity
+            style={styles.input_box2Modal}
+            onPress={() => ProfileEdit()}>
+            <Text style={styles.text_6Modal}>Save changes</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>
+  {/* ================= Edit Modal End========= */}
+</View>
+ )
+};
 
   return (
     <View style={styles.mainView}>
@@ -373,6 +418,13 @@ const SelectAddress = ({ route }) => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
         />
+      </View>
+      <View style={{ paddingHorizontal: 10, position: 'absolute', bottom: 0, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+        <TouchableOpacity
+          style={styles.input_box2}
+          onPress={() => createOrder()}>
+          <Text style={styles.text_6Modal}>Next</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -557,6 +609,19 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   input_box2Modal: {
+    width: '100%',
+    height: 54,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    borderColor: '#FB923C',
+    marginVertical: 20,
+    flexDirection: 'row',
+    alignItem: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  input_box2: {
     width: '100%',
     height: 54,
     borderRadius: 14,
