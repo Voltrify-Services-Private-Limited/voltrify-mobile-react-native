@@ -86,6 +86,7 @@ const DashboardScreen = ({ route }) => {
   );
 
   ////////////////// Categorises Api Call End ////////////////
+  
   ////////////////// Services Api Call Start ////////////////
   const getAllService = async (page = 1) => {
     if (loading) return; // Prevent multiple simultaneous requests
@@ -108,6 +109,7 @@ const DashboardScreen = ({ route }) => {
       }
 
       const resData = await response.json();
+      
       setServiceData((prevData) => [...prevData, ...resData.data]); // Append new data
     } catch (err) {
       console.log('Service Data err --- ', err);
@@ -331,7 +333,7 @@ const DashboardScreen = ({ route }) => {
             {manuallyAddress == 'true' ? (
               <>
                 <Text style={styles.headerText_1}>
-                  {manuallyLocation}
+                {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
                 </Text>
               </>
             ) : (

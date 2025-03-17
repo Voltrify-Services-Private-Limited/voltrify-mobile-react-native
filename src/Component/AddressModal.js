@@ -9,52 +9,81 @@ import {
   Modal,
   TextInput,
   Alert,
+  FlatList,
+  Image,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Geocoding from 'react-native-geocoding';
 import { GOOGLE_KEY } from '../EnvFolder/env';
 
 const AddressModal = ({ visible, onClose }) => {
-  const [FaltNumber, setFlatNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [landmark, setLandmark] = useState('');
-  const [finalAddress, setFinalAddres] = useState('');
-  const [number, setNumber] = useState('');
-  const [locationBtn, setLocationBtn] = useState(true);
+  const [modalCondition, setModalCondition] = useState(false);
+  const [locationBtn, setLocationBtn] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [location, setLocation] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
   }); // Initial location (defaults to a center)
   useEffect(() => {
-    getPhoneNumber();
     // Initialize Google Geocoding API
     Geocoding.init(GOOGLE_KEY); // Replace with your API key
   }, []);
   ///////////// Profile Id Start //////////////////
 
-  const getPhoneNumber = async () => {
-    const phoneNumber = await AsyncStorage.getItem('phoneNumber');
-    const convertNumber = JSON.parse(phoneNumber)
-    setNumber(convertNumber);
-  }
-  const handleLocationSearch = async () => {
-    const allAddress = FaltNumber + address + landmark;
-    setFinalAddres(allAddress);
-    await AsyncStorage.setItem('finalAddress', JSON.stringify(allAddress));
-    console.log(allAddress);
 
-    if (!allAddress) {
-      return;
+  const searchLocation = async (text) => {
+    setLocationBtn(true);
+    setQuery(text);
+    if (text.length > 2) {  // Trigger search after 3 characters
+      const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${text}&key=${GOOGLE_KEY}&language=en`;
+      try {
+        const response = await fetch(apiUrl);
+        const json = await response.json();
+        if (json.predictions) {
+          setResults(json.predictions);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      setResults([]); // Clear results when query is too short
     }
+  };
+
+  const handleSelectLocation = async (item) => {
+    setLocationBtn(!locationBtn);
+    setQuery(item.description);
+    setResults([]);
+
+    // Fetch place details to get coordinates
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${item.place_id}&key=${GOOGLE_KEY}`;
 
     try {
-      // Geocode the address entered by the user
-      const result = await Geocoding.from(allAddress);
-      const { lat, lng } = result.results[0].geometry.location;
-      setLocation({ latitude: lat, longitude: lng }); // Set the new location on map
+      const response = await fetch(detailsUrl);
+      const json = await response.json();
+      const { lat, lng } = json.result.geometry.location;
+
+      setSelectedLocation({
+        description: item.description,
+        latitude: lat,
+        longitude: lng,
+      });
+      await AsyncStorage.setItem('finalAddress', JSON.stringify(selectedLocation.description));
+      Alert.alert("Location Selected", item.description);
     } catch (error) {
-      Alert.alert('Error', 'Unable to find the location. Please try again.');
+      console.error(error);
     }
+  };
+  // const getPhoneNumber = async () => {
+  //   const phoneNumber = await AsyncStorage.getItem('phoneNumber');
+  //   const convertNumber = JSON.parse(phoneNumber)
+  //   setNumber(convertNumber);
+  // }
+  const handleLocationSearch = async () => {
+    await AsyncStorage.setItem('finalAddress', JSON.stringify(selectedLocation.description));
+    setModalCondition(true);
   };
 
 
@@ -85,76 +114,80 @@ const AddressModal = ({ visible, onClose }) => {
                 alignSelf: 'center',
               }}></View>
           </TouchableOpacity>
-          <View style={{ width: '100%', height: 190 }}>
-            <MapView
-              style={{ width: '100%', height: '100%' }}
-              region={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
-            >
-              <Marker coordinate={location} />
-            </MapView>
-          </View>
-          <View style={{ paddingHorizontal: 30 }}>
-            <Text style={styles.text_3Modal}>{finalAddress}</Text>
-            <Text style={styles.text_4Modal}>
-              Ph: +91 {number}
-            </Text>
-            <View style={{ height: 200, marginTop: 10, }}>
-              <View style={styles.input_boxModal}>
-                <TextInput
-                  placeholder="House/Flat Number*"
-                  placeholderTextColor="#A09CAB"
-                  keyboardType="default"
-                  style={styles.text_7Modal}
-                  onChangeText={x => setFlatNumber(x)}
-                  value={FaltNumber}
-                />
+
+          <View style={{ flex: 1 }}>
+            <View style={{ marginHorizontal: 10 }}>
+              <View style={styles.searchBar}>
+                <View style={{ justifyContent: 'center' }}>
+                  <Image source={require('../Icons/accountIcon2.png')} style={{ width: 20, height: 20 }} />
+                </View>
+                <View style={{ justifyContent: 'center', width: '90%' }}>
+                  <TextInput
+                    placeholder="Search for a location"
+                    value={query}
+                    placeholderTextColor={'#000'}
+                    onChangeText={searchLocation}
+                    style={{ height: 40, width: 'auto' }}
+                  />
+                </View>
               </View>
-              <View style={styles.input_boxModal}>
-                <TextInput
-                  placeholder="Address"
-                  placeholderTextColor="#A09CAB"
-                  keyboardType="default"
-                  style={styles.text_7Modal}
-                  onChangeText={x => setAddress(x)}
-                  value={address}
-                />
-              </View>
-              <View style={styles.input_boxModal}>
-                <TextInput
-                  placeholder="Landmark (Optional)"
-                  placeholderTextColor="#A09CAB"
-                  keyboardType="default"
-                  style={styles.text_7Modal}
-                  onChangeText={x => setLandmark(x)}
-                  value={landmark}
-                />
-              </View>
+              {selectedLocation && (
+                <Text style={{ marginBottom: 10 }}>
+                  {selectedLocation.description}
+                </Text>
+              )}
+              {locationBtn == false ? (
+                <View></View>
+              ) : (
+                <View style={{ width: '100%', height: 200, position: 'absolute', top: 95, zIndex: 10, backgroundColor: '#fff', left: 10, borderRadius: 10, elevation: 6 }}>
+                  <FlatList
+                    data={results}
+                    keyExtractor={(item) => item.place_id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity onPress={() => handleSelectLocation(item)}>
+                        <Text style={{ padding: 10 }}>{item.description}</Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              )}
             </View>
-            <View style={{ flexDirection: 'row', marginTop: 50, }}>
-                  {locationBtn === true ? (
-              <TouchableOpacity
+
+            {selectedLocation && (
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: selectedLocation.latitude,
+                  longitude: selectedLocation.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: selectedLocation.latitude,
+                    longitude: selectedLocation.longitude,
+                  }}
+                  title={selectedLocation.description}
+                />
+              </MapView>
+            )}
+
+            <View style={{ flexDirection: 'row', marginTop: 50, marginHorizontal: 20,position:'absolute',bottom:0, }}>
+              {modalCondition == false ?(
+                <TouchableOpacity
                 style={styles.input_box2Modal}
-                onPress={async () => {
-                  await handleLocationSearch(); // Ensure the location search is completed first
-                  setLocationBtn(false); // Only update the state after the location has been updated
-                }}>
+                onPress={() => handleLocationSearch()}>
                 <Text style={styles.text_6Modal}>Save Location</Text>
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
+              ):(
+                <TouchableOpacity
                 style={styles.input_box2Modal}
                 onPress={onClose}>
                 <Text style={styles.text_6Modal}>Next</Text>
               </TouchableOpacity>
-            )}
+              )}
             </View>
-       
-
           </View>
         </View>
       </View>
@@ -167,6 +200,7 @@ const styles = StyleSheet.create({
   modalViewModal: {
     backgroundColor: 'white',
     width: '100%',
+    height: "100%",
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
     // paddingHorizontal: 30,
@@ -205,6 +239,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     alignItem: 'center',
+    height: '75%',
   },
 
   main_viewModal: {
@@ -227,7 +262,7 @@ const styles = StyleSheet.create({
   },
   second_viewModal: {
     width: '100%',
-    height: 418,
+    height: '100%',
     position: 'absolute',
     bottom: 0,
     alignItems: 'center',
@@ -374,6 +409,18 @@ const styles = StyleSheet.create({
     color: '#FB923C',
     lineHeight: 14.4,
   },
+  map: {
+    width: '100%',
+    height: '60%',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    width: '100%',
+    height: 40,
+    borderBottomWidth: 1,
+    marginBottom: 10,
+    borderBottomColor: '#FB923C',
+  }
 
 });
 
