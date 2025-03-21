@@ -15,7 +15,7 @@ import {AuthContext} from '../../Component/AuthContext';
 import Geocoding from 'react-native-geocoding';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalComponent from '../../Component/AddressModal';
-import {GOOGLE_KEY} from '../../EnvFolder/env';
+import {GOOGLE_KEY} from '../../../EnvFolder/env';
 import {
   isLocationEnabled,
   promptForEnableLocationIfNeeded,

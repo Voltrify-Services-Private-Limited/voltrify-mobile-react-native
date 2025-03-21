@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import RazorpayCheckout from 'react-native-razorpay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RAZORPAY_KEY } from '../../EnvFolder/env';
+import { RAZORPAY_KEY } from '../../../EnvFolder/env';
 const PaymentScreen = ({ route }) => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);

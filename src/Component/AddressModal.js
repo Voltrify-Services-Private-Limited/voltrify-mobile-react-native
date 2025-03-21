@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Geocoding from 'react-native-geocoding';
-import { GOOGLE_KEY } from '../EnvFolder/env';
+import { GOOGLE_KEY } from '../../EnvFolder/env';
 
 const AddressModal = ({ visible, onClose }) => {
   const [modalCondition, setModalCondition] = useState(false);
