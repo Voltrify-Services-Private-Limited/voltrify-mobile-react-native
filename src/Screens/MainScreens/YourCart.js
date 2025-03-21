@@ -44,7 +44,7 @@ const YourCart = ({ route }) => {
     const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
     console.log(id);
     try {
-      const response = await fetch(`http://api.voltrify.in//user/cart/${id}`, {
+      const response = await fetch(`http://api.voltrify.in/user/cart/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -71,8 +71,8 @@ const YourCart = ({ route }) => {
       <View style={styles.leftSide}>
         <Image source={require('../../Icons/cartImage1.png')} />
         <View style={{ marginHorizontal: 10 }}>
-          <Text style={styles.listTextHeading}>AC Service & Repair</Text>
-          <Text>1 {item.id} </Text>
+          <Text style={styles.listTextHeading}>{item.device_name}</Text>
+          <Text style={styles.listTextHeading}>{item.service_name}</Text>
         </View>
       </View>
       <TouchableOpacity onPress={() => deleteCart(item.id)} style={{justifyContent:'center'}}>
@@ -99,17 +99,14 @@ const YourCart = ({ route }) => {
         renderItem={renderItem_first}
         keyExtractor={(item) => item.id.toString()}
       />
-      <Text style={styles.lineText}>
-        . Power Saver AC Service with Cleaning
-      </Text>
-      <View style={styles.buttonGroup}>
+      {/* <View style={styles.buttonGroup}>
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Add Services</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, { backgroundColor: '#FB923C' }]} onPress={() => navigation.navigate('PaymentScreen')}>
           <Text style={[styles.buttonText, { color: '#ffffff' }]}>Checkout</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </View>
   );
 };
@@ -160,11 +157,11 @@ const styles = StyleSheet.create({
   buttonGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 6,
+    marginHorizontal: 0,
     marginVertical: 20,
   },
   button: {
-    width: 190,
+    width: 170,
     height: 40,
     borderWidth: 1,
     borderColor: '#FB923C',

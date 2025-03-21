@@ -7,7 +7,7 @@ const CustomModal = ({ visible, onClose }) => {
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.overlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.text_6}>Trun On Location </Text>
+          <Text style={styles.text_6}>Please enable GPS</Text>
           <TouchableOpacity
             style={[styles.button]}
             onPress={onClose}>

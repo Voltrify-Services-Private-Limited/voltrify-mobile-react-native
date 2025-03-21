@@ -16,9 +16,10 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showToast } from '../../Component/Toast';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+import IndianFlag from '../../SvgImage/IndianFlag';
 const LoginScreenMobile = ({route}) => {
   const navigation = useNavigation();
+  const [warning, setWarning] = useState(false);
 
   const [phone_number, setPhoneNumber] = useState();
 
@@ -47,25 +48,38 @@ const LoginScreenMobile = ({route}) => {
   // };
 
   const UserLoginApi = async () => {
-    const url = 'http://api.voltrify.in/otp/generate-otp';
-    result = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        phone_number: phone_number,
-      }),
-    });
+    try {
+      console.log('enter UserLoginApi', phone_number);
+    
+      const url = 'https://api.voltrify.in/otp/generate-otp';
+      result = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          phone_number: phone_number,
+        }),
+      });
+      console.log('before response', result);
 
-    response = await result.json();
-    console.log('login data', response);
+      response = await result.json();
+      console.log('response', response);
+      if (response.statusCode === 404) {
+        setWarning(true);
+        return false;
+      }
+      console.log('login data', response);
+      return true;
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const loginData = () => {
-    _numberLogin();
+  const loginData = async () => {
+    await _numberLogin();
     numberData();
   };
 
-  const _numberLogin = () => {
+  const _numberLogin = async () => {
     if (phone_number == '') {
       showToast({text: 'Please enter your Phone Number.', navBar: false});
     } else if (phone_number.length < 10) {
@@ -74,8 +88,10 @@ const LoginScreenMobile = ({route}) => {
         navBar: false,
       });
     } else {
-      UserLoginApi();
-      navigation.navigate('OtpScreen', {phoneNumber: phone_number});
+      const LoginResponse = await UserLoginApi();
+      if (LoginResponse){
+        navigation.navigate('OtpScreen', {phoneNumber: phone_number});
+      }
     }
   };
   return (
@@ -107,11 +123,10 @@ const LoginScreenMobile = ({route}) => {
         </View>
         <Text style={styles.text_3}>Login Mobile Number.</Text>
         <Text style={styles.text_4}>Enter your Mobile Number to Login</Text>
+        {warning ? <Text style={styles.text_warning}>Account not found. Please do registration.</Text> : null}
         <View style={styles.input_box}>
-          <Image
-            source={require('../../Icons/flag_india.png')}
-            style={{marginVertical: 14}}
-          />
+          <IndianFlag width={24} height={24} />
+          
           <TextInput
             placeholder="Enter Your Mobile Number"
             placeholderTextColor="#00000066"
@@ -122,7 +137,7 @@ const LoginScreenMobile = ({route}) => {
             value={phone_number}
           />
         </View>
-        <TouchableOpacity style={[styles.button]} onPress={() => loginData()}>
+        <TouchableOpacity style={[styles.button]} onPress={async () => await loginData()}>
           <Text style={styles.text_5}>Send OTP</Text>
         </TouchableOpacity>
         {/* <View style={styles.lineBox}>
@@ -207,6 +222,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'center',
     marginTop: 10,
+  },
+  text_warning: {
+    fontSize: 13,
+    fontWeight: 400,
+    color: '#F87171',
+    lineHeight: 20,
+    top: 35
   },
   input_box: {
     width: 328,

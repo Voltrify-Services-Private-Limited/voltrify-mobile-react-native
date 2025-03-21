@@ -1,181 +1,157 @@
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     Image,
-    TextInput,
+    Animated,
     TouchableOpacity,
-    ProgressBarAndroid,
     ScrollView,
-    Alert,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const OrderVerify = ({ route }) => {
+import LinearGradient from 'react-native-linear-gradient';
+
+
+
+const OrderVerify = () => {
     const navigation = useNavigation();
-    const [data, setData] = useState({});
     const [deviceName, setDeviceName] = useState('');
     const [serviceType, setServiceType] = useState('');
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
+    const fadeAnim = new Animated.Value(1);
 
-    useEffect(() => { 
-        OrdersDetails();
-        // Hide splash screen after 2 seconds and navigate to HomeScreen
-        const timer = setTimeout(() => {
-            navigation.navigate('BottomNavigation'); // Navigate to Home screen
-        }, 2000);
+    useEffect(() => {
+        fetchOrderDetails();
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+        }).start();
 
-        return () => clearTimeout(timer);
-       
     }, []);
+  
 
-    const OrdersDetails = async()=>{
+    const fetchOrderDetails = async () => {
         const timeSlot = await AsyncStorage.getItem('time_slot');
         const dateSlot = await AsyncStorage.getItem('slot_no_day');
         const type = await AsyncStorage.getItem('serviceType');
         const name = await AsyncStorage.getItem('serviceName');
-        const timeconvert = JSON.parse(timeSlot);
-        const datecovert = JSON.parse(dateSlot);
-        setDate(datecovert);
-        setTime(timeconvert);
+
+        setDate(JSON.parse(dateSlot));
+        setTime(JSON.parse(timeSlot));
         setServiceType(type);
         setDeviceName(name);
-        console.log("aaaassssss", date + time + type + name)
-    }
+    };
 
     return (
-        <View style={styles.mainView}>
-            {/* <View style={styles.topHeader}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => navigation.navigate('BottomTab')}>
-                    <Image source={require('../../Icons/leftArrow.png')} />
+        <LinearGradient colors={['#FF9800', '#FF5722']} style={styles.container}>
+            <View style={styles.content}>
+                <Animated.View style={[styles.circle, { opacity: fadeAnim }]}> 
+                    <View style={styles.container}>
+                        <Image source={require('../../Icons/done-tick.png')} style={styles.icon} />
+                    </View>
+                </Animated.View>
+                <Text style={styles.orderText}>Order Confirmed!</Text>
+                <Text style={styles.subText}>Your service has been scheduled successfully</Text>
+                
+                <View style={styles.detailsContainer}>
+                    <Text style={styles.detailHeading}>Order Summary</Text>
+                    <View style={styles.detailRow}><Text style={styles.detailLabel}>Device:</Text><Text style={styles.detailValue}>{deviceName}</Text></View>
+                    <View style={styles.detailRow}><Text style={styles.detailLabel}>Service Type:</Text><Text style={styles.detailValue}>{serviceType}</Text></View>
+                    <View style={styles.detailRow}><Text style={styles.detailLabel}>Date:</Text><Text style={styles.detailValue}>{date}</Text></View>
+                    <View style={styles.detailRow}><Text style={styles.detailLabel}>Time:</Text><Text style={styles.detailValue}>{time}</Text></View>
+                </View>
+                
+                <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('BottomNavigation')}>
+                    <Text style={styles.buttonText}>Go to Home</Text>
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Back To Home</Text>
-            </View> */}
-            <View style={styles.topView}>
-                <View style={styles.check_circle}>
-                    <Image source={require('../../Icons/checkmark.png')} style={{ width: 50, height: 50, }} />
-                </View>
-                <Text style={styles.orderText}>Your Order Is Placed</Text>
             </View>
-            <View style={{
-                position: 'absolute',
-                bottom: 0, width: '100%',
-                height: 250,
-                backgroundColor: '#bbb',
-                borderTopRightRadius: 30,
-                borderTopLeftRadius: 30,
-            }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 25, paddingHorizontal: 20 }}>
-                    <View style={styles.line}></View> <Text style={styles.textDetails}>Order Details</Text> <View style={styles.line}></View>
-                </View>
-                <View style={styles.detailBox}>
-                    <Text style={styles.headingText}>Device Name : <Text style={styles.textStyle}>{deviceName}</Text></Text>
-                    <Text style={styles.headingText}>Service Type : <Text style={styles.textStyle}>{serviceType}</Text></Text>
-                    <Text style={styles.headingText}>Date : <Text style={styles.textStyle}>{date}</Text></Text>
-                    <Text style={styles.headingText}>Time : <Text style={styles.textStyle}>{time}</Text></Text>
-                </View>
-            </View>
-        </View>
+        </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
-    mainView: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    topHeader: {
-        marginVertical: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    backButton: {
-        width: 32,
-        height: 32,
-        backgroundColor: '#FB923C',
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerText: {
-        fontSize: 18,
-        fontWeight: 700,
-        lineHeight: 40,
-        marginHorizontal: 20,
-        color: '#FB923C',
-    },
-    topView: {
-        width: '100%',
-        height: 500,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#FB923C'
-    },
-    check_circle: {
+    icon: {
         width: 100,
         height: 100,
-        backgroundColor: '#fff',
+        borderRadius: 50,
+        tintColor: '#fff',
+    },
+    content: {
+        alignItems: 'center',
+        width: '90%',
+    },
+    container: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: '100%',
-        elevation: 10,
+    },
+    circle: {
+        width: 120,
+        height: 120,
+        backgroundColor: '#4CAF50', // Green color like success animation
+        borderRadius: 60, // Make it circular
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 10, // Shadow effect
     },
     orderText: {
         fontSize: 24,
-        fontWeight: '600',
+        fontWeight: 'bold',
         color: '#fff',
-        marginVertical: 10,
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: -1, height: 1 },
-        textShadowRadius: 10
+        marginBottom: 5,
+        textAlign: 'center',
     },
-    detailBox: {
+    subText: {
+        fontSize: 16,
+        color: '#fff',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    detailsContainer: {
         width: '100%',
-        height: 'auto',
         backgroundColor: '#fff',
-        elevation: 10,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        justifyContent: 'center',
-        position: 'absolute',
-        bottom: 0,
-        borderTopRightRadius: 30,
-        borderTopLeftRadius: 30,
+        padding: 20,
+        borderRadius: 12,
+        elevation: 8,
     },
-
-    headingText: {
+    detailHeading: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+        color: '#333',
+    },
+    detailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    detailLabel: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#555',
+    },
+    detailValue: {
         fontSize: 16,
         fontWeight: 'bold',
-        lineHeight: 40,
-        color: '#000',
+        color: '#222',
     },
-
-    textStyle: {
-        fontSize: 14,
-        fontWeight: 400,
-        lineHeight: 40,
-        color: '#000',
+    homeButton: {
+        marginTop: 20,
+        backgroundColor: '#FFC107',
+        paddingVertical: 12,
+        paddingHorizontal: 40,
+        borderRadius: 30,
+        elevation: 4,
     },
-    line: {
-        width: 140,
-        height: 0,
-        borderWidth: 2,
-        justifyContent: 'center',
-        marginTop: 9,
-        backgroundColor: '#fff',
-        marginHorizontal: 10,
-        borderColor: '#fff'
-
-    },
-    textDetails: {
+    buttonText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#fff',
-    }
+        color: '#222',
+    },
 });
 
 export default OrderVerify;

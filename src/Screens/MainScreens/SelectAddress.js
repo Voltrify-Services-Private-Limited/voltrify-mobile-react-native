@@ -165,6 +165,17 @@ const SelectAddress = ({ route }) => {
         date: date,
       }),
     });
+    console.log('order body: ', {
+      cart_id: cart_id,
+      address_id: addresId,
+      condition_id: condition_Id,
+      time_slot: time,
+      coupons_code: coupons_code,
+      payment_mode: "online",
+      service_description: service_description,
+      date: date,
+    });
+    
     response = await result.json();
     console.log('order data========', response);
     navigation.navigate('PaymentScreen',{order_id: response.data.payment_order_id});

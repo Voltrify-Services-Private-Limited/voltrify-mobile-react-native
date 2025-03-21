@@ -109,7 +109,7 @@ const PaymentCard = ({ route }) => {
         const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
         console.log(id);
         try {
-            const response = await fetch(`http://api.voltrify.in//user/cart/${cardId}`, {
+            const response = await fetch(`http://api.voltrify.in//user/card/${cardId}`, {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${token}`,

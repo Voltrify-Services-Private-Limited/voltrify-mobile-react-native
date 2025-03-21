@@ -172,8 +172,10 @@ const DashboardScreen = ({ route }) => {
             justifyContent: 'space-between',
             marginVertical: 3,
           }}>
-          <Text style={styles.text_2}>({item.visitingCharge})</Text>
-          <Text style={styles.text_3}>₹ {item.price}</Text>
+          <Text style={styles.text_3}>₹{item.price}
+            <Text style={styles.text_2}> + ₹{item.visitingCharge}(visit)</Text>
+          </Text>
+          
         </View>
       </TouchableOpacity>
     </View>
@@ -288,7 +290,7 @@ const DashboardScreen = ({ route }) => {
       }),
     });
     response = await result.json();
-    console.log('login data', response);
+    console.log('createCart data', response);
   }
 
   const filteredServiceData = serviceData.filter((service) =>
@@ -414,12 +416,27 @@ const DashboardScreen = ({ route }) => {
           />
         </View>
 
+        {/* Filtered Devices */}
+        <View style={{ marginVertical: 5, }}>
+          <Text style={styles.heading1}>Most Devices</Text>
+          <Text style={styles.text_1}>Book the Devices for you!</Text>
+        </View>
+        <View style={styles.sliderList}>
+          <FlatList
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            data={filteredDevicesData} // Use filtered devices
+            renderItem={devicesItem}
+            keyExtractor={(item) => item.id.toString()}
+          />
+        </View>
+
         {/* Filtered Services */}
         <View style={{ marginVertical: 5 }}>
           <Text style={styles.heading1}>Most Booked Services</Text>
           <Text style={styles.text_1}>Book the right services for you!</Text>
         </View>
-        <View style={styles.sliderList}>
+        <View style={styles.servicesSliderList}>
           {/* <FlatList
             horizontal={true}
             data={filteredServiceData} // Use filtered services
@@ -441,21 +458,6 @@ const DashboardScreen = ({ route }) => {
             ListFooterComponent={loading ? (<View style={{ justifyContent: 'center', marginVertical: 40, alignItems: 'center' }}><ActivityIndicator size="large" color="#FB923C" /></View>) : (null)} // Show loader at the bottom
           />
 
-        </View>
-
-        {/* Filtered Devices */}
-        <View style={{ marginVertical: 5, }}>
-          <Text style={styles.heading1}>Most Devices</Text>
-          <Text style={styles.text_1}>Book the Devices for you!</Text>
-        </View>
-        <View style={styles.sliderList}>
-          <FlatList
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            data={filteredDevicesData} // Use filtered devices
-            renderItem={devicesItem}
-            keyExtractor={(item) => item.id.toString()}
-          />
         </View>
         <ModalComponent visible={modalVisible} onClose={() => updateManaullyAddress()} />
       </ScrollView>
@@ -555,6 +557,10 @@ const styles = StyleSheet.create({
   },
   sliderList: {
     marginVertical: 5,
+    height: 145,
+  },
+  servicesSliderList: {
+    marginVertical: 5,
     height: 200,
   },
   sliderCard: {
@@ -563,7 +569,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardBox: {
-    width: 86,
+    width: 110,
     height: 'auto',
     marginHorizontal: 5,
   },

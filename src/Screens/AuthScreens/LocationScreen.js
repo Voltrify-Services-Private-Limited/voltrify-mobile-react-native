@@ -1,67 +1,48 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
   View,
   Image,
   TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-  ScrollView,
   PermissionsAndroid,
   Platform,
+  ActivityIndicator,
+  Modal
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import { AuthContext } from '../../Component/AuthContext';
+import {AuthContext} from '../../Component/AuthContext';
 import Geocoding from 'react-native-geocoding';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import GoogleMap from '../../Component/GoogleMap';
 import ModalComponent from '../../Component/AddressModal';
-import { GOOGLE_KEY } from '../../EnvFolder/env';
-import CustomModal from '../../Component/CustomModal';
-// import Geolocation from '@react-native-community/geolocation'; // For location
-// import Geocoding from 'react-native-geocoding'; // For reverse geocoding
-// import { PermissionsAndroid } from 'react-native'; // For requesting location permission on Android
+import {GOOGLE_KEY} from '../../EnvFolder/env';
+import {
+  isLocationEnabled,
+  promptForEnableLocationIfNeeded,
+} from 'react-native-android-location-enabler';
 
-const LocationScreen = ({ route }) => {
-  const navigation = useNavigation();
-  const [modalVisible, setModalVisible] = useState(false);
+const LocationScreen = ({route}) => {
+  const [loading, setLoading] = useState(false);
   const [locationModal, setLocationModal] = useState(false);
-  const [customModal, setCustomModal] = useState(false);
-  const [addressLine2, setAddressLine2] = useState('');
-  const [addressLine1, setAddressLine1] = useState('');
-  const [landmark, setLandmark] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [state, setState] = useState('');
-  const [pincode, setPincode] = useState('');
-  const [city, setCity] = useState('');
-  const [phone, setPhone] = useState('');
   const [user, setUser] = useState([]);
   const [location, setLocation] = useState({
     latitude: null,
     longitude: null,
     error: null,
   });
-  const [error, setError] = useState('');
   const [UserAddress, setUserAddress] = useState('');
-  const { login } = React.useContext(AuthContext);
-  const { tokens } = route.params;
+  const {login} = React.useContext(AuthContext);
+  const {tokens} = route.params;
 
-  console.log(location, UserAddress);
-  console.log('adresss---------------', UserAddress);
+  console.log('adresss: ', UserAddress);
 
   useEffect(() => {
     getProfile_id();
   }, []);
 
-
   const setUserId = async () => {
-    await AsyncStorage.setItem("userId", user);
-  }
+    await AsyncStorage.setItem('userId', user);
+  };
 
   ///////////// Profile Id Start //////////////////
 
@@ -86,50 +67,9 @@ const LocationScreen = ({ route }) => {
       await AsyncStorage.setItem('userName', resData.data.firstName);
       await AsyncStorage.setItem('userNumber', resData.data.phoneNumber);
       await AsyncStorage.setItem('userEmail', resData.data.email);
-
     } catch (err) {
       console.log('get profile err --- ', err);
     }
-  };
-
-
-  ///////////// Profile Id End //////////////////
-
-  const UserLoginApi = async () => {
-    const userData = await AsyncStorage.getItem('access_token');
-    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-    const url = 'http://api.voltrify.in/user/address';
-    result = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json', // Optional, depending on your API requirements
-      },
-      body: JSON.stringify({
-        user_id: user,
-        firstName: firstName,
-        lastName: lastName,
-        city: city,
-        addressLine2: addressLine2,
-        addressLine1: addressLine1,
-        landmark: landmark,
-        phoneNumber: phone,
-        state: state,
-        pincode: pincode,
-      }),
-    });
-
-    await AsyncStorage.setItem("address1", addressLine1);
-    await AsyncStorage.setItem("address2", addressLine2);
-    await AsyncStorage.setItem("landmark", landmark);
-    await AsyncStorage.setItem("city", city);
-    await AsyncStorage.setItem("state", state);
-    await AsyncStorage.setItem("pincode", pincode);
-    response = await result.json();
-    console.log('login data', response);
-    setModalVisible(!modalVisible);
-    setUserId();
-    login(tokens);
   };
 
   // Request permission for location (Android only)
@@ -139,7 +79,7 @@ const LocationScreen = ({ route }) => {
     }
 
     // Initialize Geocoding API with your key
-    Geocoding.init(GOOGLE_KEY);  // Replace with your actual API Key
+    Geocoding.init(GOOGLE_KEY); // Replace with your actual API Key
   }, []);
 
   // Request location permission on Android
@@ -148,14 +88,14 @@ const LocationScreen = ({ route }) => {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
-          title: "Location Permission",
-          message: "We need access to your location to get your address."
-        }
+          title: 'Location Permission',
+          message: 'We need access to your location to get your address.',
+        },
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("Location permission granted");
+        console.log('Location permission granted');
       } else {
-        setError("Location permission denied");
+        console.log('Location permission denied');
       }
     } catch (err) {
       console.warn(err);
@@ -164,62 +104,117 @@ const LocationScreen = ({ route }) => {
 
   // Function to get the current position
   const getCurrentPosition = () => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude, error: null });
+    return new Promise((resolve, reject) => {
+      setLoading(true); // Show loader
 
-        // Once the location is fetched, trigger geocoding to get address
-        fetchAddress(latitude, longitude);
-      },
-      (error) => {
-        setLocation({ ...location, error: error.message });
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
+      Geolocation.getCurrentPosition(
+        position => {
+          const {latitude, longitude} = position.coords;
+          setLocation({latitude, longitude, error: null});
+
+          fetchAddress(latitude, longitude)
+            .then(address => {
+              setUserAddress(address); // Ensure state updates
+              setLoading(false); // Hide loader after fetching address
+              resolve(address); // Return the address
+            })
+            .catch(err => {
+              console.log('Address Fetch Error:', err);
+              setLoading(false);
+              reject(err);
+            });
+        },
+        error => {
+          setLocation(prevState => ({...prevState, error: error.message}));
+          setLoading(false);
+          reject(error);
+        },
+        {enableHighAccuracy: true, timeout: 90000, maximumAge: 10000},
+      );
+    });
   };
 
   // Function to fetch address using reverse geocoding
   const fetchAddress = (latitude, longitude) => {
-    Geocoding.from(latitude, longitude)
-      .then((json) => {
-        if (json.results && json.results.length > 0) {
-          const formattedAddress = json.results[0].formatted_address;
-          setUserAddress(formattedAddress);
-        } else {
-          setError('No address found for these coordinates.');
-        }
-      })
-      .catch((err) => {
-        setError('Error: ' + err.message);
-      });
+    return new Promise((resolve, reject) => {
+      Geocoding.from(latitude, longitude)
+        .then(json => {
+          if (json.results && json.results.length > 0) {
+            const formattedAddress = json.results[0].formatted_address;
+            resolve(formattedAddress); // Return address
+          } else {
+            console.log('No address found for these coordinates.');
+            reject(new Error('No address found'));
+          }
+        })
+        .catch(err => {
+          console.log('Error: ' + err.message);
+          reject(err); // Reject on error
+        });
+    });
   };
 
-
-  const setLocationLogin = async () => {
-    getCurrentPosition();
-    setCustomModal(true);
-    await AsyncStorage.setItem('latitude', JSON.stringify(UserAddress));
-    
+  async function checkGPSEnabled() {
+    if (Platform.OS === 'android') {
+      const checkEnabled = await isLocationEnabled();
+      console.log('checkEnabled', checkEnabled);
+      return checkEnabled;
+    }
+    return false;
+  }
+  async function enabledGPSPopup() {
+    try {
+      const enableResult = await promptForEnableLocationIfNeeded();
+      console.log('enableResult', enableResult);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+    }
   }
   const LocationLogin = async () => {
-    getCurrentPosition();
-    await AsyncStorage.setItem('latitude', JSON.stringify(UserAddress));
-    setUserId();
-    login(tokens);
-  }
-   const LocationFrom = async () => {
+    const isGPSEnabled = await checkGPSEnabled();
+    if (!isGPSEnabled) {
+      if (Platform.OS === 'android') {
+        await enabledGPSPopup();
+      }
+    }
+    // Ensure location fetching completes
+    const address = await getCurrentPosition();
+
+    if (address) {
+      await AsyncStorage.setItem('latitude', JSON.stringify(address)); // Store the fetched address
+      setUserId(); // Set user ID only after address is fetched
+      login(tokens); // Ensure login happens after all async tasks complete
+    } else {
+      console.log('address:', address);
+
+      console.error('Failed to fetch address. Login aborted.');
+    }
+  };
+  const LocationFrom = async () => {
     const manuallyAddress = 'true';
-    await AsyncStorage.setItem("manuallyAddress", manuallyAddress);
-    setModalVisible(true);
+    await AsyncStorage.setItem('manuallyAddress', manuallyAddress);
     setUserId();
     login(tokens);
-  }
-  
+  };
+
+  const Loader = ({ visible }) => {
+    return (
+      <Modal transparent={true} animationType="fade" visible={visible}>
+        <View style={styles.container}>
+          <View style={styles.loader}>
+            <ActivityIndicator size="large" color="#2F80ED" />
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   return (
     <View style={styles.main_view}>
-      <View style={{ top: 92, alignItems: 'center', justifyContent: 'center' }}>
+      {loading && <Loader visible={loading} />}
+      <View style={{top: 92, alignItems: 'center', justifyContent: 'center'}}>
         <Text style={styles.text_1}>Welcome to</Text>
         <Image source={require('../../Icons/text_logo1.png')} />
         <Text style={styles.text_1}>Your One Stop Solution</Text>
@@ -242,24 +237,21 @@ const LocationScreen = ({ route }) => {
             }}></View>
         </View>
 
-
-        <ModalComponent visible={locationModal} onClose={() => LocationFrom()} />
-        <CustomModal visible={customModal} onClose={() => setCustomModal(false)}/>
+        <ModalComponent
+          visible={locationModal}
+          onClose={() => LocationFrom()}
+        />
 
         <Text style={styles.text_3}>Enable Location </Text>
         <Text style={styles.text_4}>
           Please enable your location {'\n'} so that we can serve you better
         </Text>
         <Image source={require('../../Icons/Group.png')} />
-        {UserAddress == '' ? (<TouchableOpacity
-          style={[styles.button]}
-          onPress={() => setLocationLogin()}>
-          <Text style={styles.text_5}>Enable Location</Text>
-        </TouchableOpacity>) : (<TouchableOpacity
+        <TouchableOpacity
           style={[styles.button]}
           onPress={() => LocationLogin()}>
           <Text style={styles.text_5}>Enable Location</Text>
-        </TouchableOpacity>)}
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button]}
           onPress={() => setLocationModal(true)}>
@@ -547,5 +539,16 @@ const styles = StyleSheet.create({
     fontWeight: 500,
     color: '#FB923C',
     lineHeight: 14.4,
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark semi-transparent overlay
+  },
+  loader: {
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
   },
 });

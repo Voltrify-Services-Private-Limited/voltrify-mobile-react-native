@@ -71,7 +71,7 @@ const AccountScreen = ({route}) => {
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
         </TouchableOpacity>
-        <View style={styles.listItem}>
+        {/* <View style={styles.listItem}>
           <TouchableOpacity
             style={styles.rightSide}
             onPress={() => navigation.navigate('PaymentCard')}>
@@ -81,7 +81,7 @@ const AccountScreen = ({route}) => {
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/rightArrow.png')} />
           </View>
-        </View>
+        </View> */}
         {/* <View style={styles.listItem}>
           <View style={styles.rightSide}>
             <Image source={require('../../Icons/accountIcon4.png')} />

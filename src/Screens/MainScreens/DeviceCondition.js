@@ -14,10 +14,6 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const data = [
-    { label: 'Not Working', value: '1' },
-    { label: 'Jam', value: '2' },
-];
 const DeviceCondition = ({ route }) => {
     const [selectedValue, setSelectedValue] = useState(null);
     const [condition, setCondition] = useState([]);
@@ -49,7 +45,7 @@ const DeviceCondition = ({ route }) => {
           }
           const resData = await response.json();
           await AsyncStorage.setItem('cartId',resData.data[0].id);
-          console.log(resData.data[0].id);
+          console.log("cart get all api pick one: ", resData.data[0].id);
         } catch (err) {
           console.log('get Order err --- ', err);
         }

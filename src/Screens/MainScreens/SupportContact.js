@@ -19,48 +19,37 @@ const SupportContact = ({route}) => {
         </TouchableOpacity>
         <Text style={styles.headerText}>Contact</Text>
       </View>
-     <View>
+      <View>
         <View style={styles.card}>
-            <View style={{justifyContent:"center"}}>
-        <Text style={styles.lable}>Contact No. : </Text>
-            </View>
-        <View style={{justifyContent:'center'}}>
-        <Text style={styles.value}>07514508462</Text> 
-        </View>
-        </View>
-        <View style={styles.card}>
-            <View style={{justifyContent:"center"}}>
-        <Text style={styles.lable}>Email Id : </Text>
-            </View>
-        <View style={{justifyContent:'center'}}>
-        <Text style={styles.value}>complaint@voltrify.in</Text> 
-        </View>
-        </View>
-        <View style={[styles.card,{flexDirection:'none',height:'auto',paddingVertical:10,}]}>
-            <View style={{justifyContent:"center"}}>
-        <Text style={styles.lable}>Office Address : </Text>
-            </View>
-        <View style={{justifyContent:'center'}}>
-        <Text style={styles.value}>Gwalior, Madhya Pradesh, India</Text> 
-        </View>
+          <View style={{justifyContent: 'center'}}>
+            <Text style={styles.lable}>Contact No. : </Text>
+          </View>
+          <View style={{justifyContent: 'center'}}>
+            <Text style={styles.value}>07514508462 (09:00 AM - 06:00 PM)</Text>
+          </View>
         </View>
         <View style={styles.card}>
-            <View style={{justifyContent:"center"}}>
-        <Text style={styles.lable}>Available Time : </Text>
-            </View>
-        <View style={{justifyContent:'center'}}>
-        <Text style={styles.value}>( 09:00 AM & 06:00 PM )</Text> 
+          <View style={{justifyContent: 'center'}}>
+            <Text style={styles.lable}>Email Id : </Text>
+          </View>
+          <View style={{justifyContent: 'center'}}>
+            <Text style={styles.value}>complaint@voltrify.in</Text>
+          </View>
         </View>
+        <View
+          style={[
+            styles.card,
+            {flexDirection: 'none', height: 'auto', paddingVertical: 10},
+          ]}>
+          <View style={{justifyContent: 'center'}}>
+            <Text style={styles.lable}>Office Address : </Text>
+          </View>
+          <View style={{justifyContent: 'center'}}>
+            <Text style={styles.value}>Basement, Shri sai kala building, Char shahar ka naka, Gwalior, Madhya Pradesh, India</Text>
+          </View>
         </View>
-        <View style={styles.card}>
-            <View style={{justifyContent:"center"}}>
-        <Text style={styles.lable}>Available Day : </Text>
-            </View>
-        <View style={{justifyContent:'center'}}>
-        <Text style={styles.value}>( Mon - Sat )</Text> 
-        </View>
-        </View>
-     </View>
+        
+      </View>
     </View>
   );
 };
@@ -113,27 +102,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#161616',
   },
-  card:{
-    width:'100%',
-    height:50,
-    backgroundColor:'#F7F7F7',
-    borderRadius:5,
-    marginVertical:5,
-    flexDirection:"row",
-    paddingHorizontal:10, 
-    borderWidth:1,
-    borderColor:'#FB923C',
+  card: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#F7F7F7',
+    borderRadius: 5,
+    marginVertical: 5,
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#FB923C',
   },
-  lable:{
-    fontSize:14,
-    fontWeight:'bold',
-    color:'#000',
+  lable: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000',
   },
-  value:{
-    fontSize:12,
-    fontWeight:500,
-    color:'#000',
-  }
+  value: {
+    fontSize: 12,
+    fontWeight: 500,
+    color: '#000',
+  },
 });
 
 export default SupportContact;
