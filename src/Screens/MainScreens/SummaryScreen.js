@@ -37,8 +37,8 @@ const SummaryScreen = ({ route }) => {
     setIsVisible(!isVisible);
   }
 
-  const paymentBtn = () => {
-    navigation.navigate("PaymentScreen");
+  const paymentBtn = async () => {
+    navigation.navigate("DeviceCondition", { time_slot: selectedCurrent });
   }
   useEffect(() => {
     getCoupans();
@@ -281,8 +281,8 @@ const SummaryScreen = ({ route }) => {
       <View style={{ flex: 1 }}>
         <Text style={[styles.text_1, { marginLeft: 20, }]}>{item.type}</Text>
         <View style={styles.section_1}>
-          <View style={{ justifyContent: 'center' }}>
-            <Text style={styles.text_2}>{item.name}</Text>
+          <View style={{ justifyContent: 'center', flex: 1 }}>
+            <Text style={styles.text_4}>{item.name}</Text>
           </View>
           <View style={{ flexDirection: 'row' }}>
             <View style={{ justifyContent: 'center', width: 68 }}>
@@ -364,19 +364,19 @@ const SummaryScreen = ({ route }) => {
         <View>
           <View style={styles.section_5}>
             <View>
-              <Text style={styles.text_16}>Pay Online (Visiting Charge) : <Text>{item.visitingCharge}</Text></Text>
+              <Text style={styles.text_16}>Pay Online (Visiting Charge) : <Text>₹{item.visitingCharge}</Text></Text>
             </View>
             <View>
               {totalAmout == "" ? (
-                <Text style={styles.text_16}>Pay to field engineer after service or device inspection {'\n'}(Service charge) : {totalPriceVisiting} </Text>
+                <Text style={styles.text_16}>Pay to field engineer after service or device inspection {'\n'}(Service charge) : ₹{totalPriceVisiting} </Text>
               ) : (
-                <Text style={styles.text_16}>Pay to field engineer after service or device inspection {'\n'}(Service charge) : {totalAmout} </Text>
+                <Text style={styles.text_16}>Pay to field engineer after service or device inspection {'\n'}(Service charge) : ₹{totalAmout} </Text>
               )}
             </View>
           </View>
-          <View style={[styles.section_5, { flexDirection: 'row' }]}>
+          <View style={[styles.section_5, { flexDirection: 'column' }]}>
             <Text style={[styles.text_7, { color: '#FB923C', marginRight: 5, }]}>Note :</Text>
-            <Text style={styles.text_2}>Price can increase on site after device inspection by engineer.</Text>
+            <Text style={styles.text_7}>Price may increase or decrease on site after device inspection by engineer.</Text>
           </View>
         </View>
         {/* ================= Coupons Offers Modal Start========= */}
@@ -449,7 +449,7 @@ const SummaryScreen = ({ route }) => {
                   }}></View>
               </TouchableOpacity>
               <View style={styles.addressView}>
-                <Image source={require('../../Icons/locationIcon.png')} />
+                <Image source={require('../../Icons/locationIcon.png')} style={{width: 13, height: 13}}/>
                 <View style={{ justifyContent: 'center' }}>
                   {manuallyAddress == 'true' ? (
                     <>
@@ -466,10 +466,10 @@ const SummaryScreen = ({ route }) => {
                   )}
                 </View>
               </View>
-              <Text style={{ fontSize: 12, fontWeight: 600, lineHeight: 14.4, color: "#1C1B1F" }}>When should the professional arrive?</Text>
-              <Text style={{ fontSize: 10, lineHeight: 15, fontWeight: 400, color: "#A09CAB" }}>Your service will take approx. 40 Mins</Text>
+              <Text style={{ fontSize: 15, fontWeight: 600, lineHeight: 14.4, color: "#1C1B1F" }}>When should the professional arrive?</Text>
+              {/* <Text style={{ fontSize: 10, lineHeight: 15, fontWeight: 400, color: "#A09CAB" }}>Your service will take approx. 40 Mins</Text> */}
               <View style={{ marginVertical: 10, }}>
-                <Text style={{ fontSize: 10, fontWeight: 500, lineHeight: 15, color: '#000000' }}>Choose Date & Time</Text>
+                <Text style={{ fontSize: 14, fontWeight: 500, lineHeight: 15, color: '#000000' }}>Choose Date & Time</Text>
                 {renderWeekInRows(daysAndDates).map((row, rowIndex) => (
                   <View key={rowIndex} style={styles.row}>
                     {row.map((date, index) => (
@@ -542,7 +542,7 @@ const SummaryScreen = ({ route }) => {
       <View style={styles.bottomView}>
         <View style={styles.topHeader2}>
           <View style={styles.headerLeft}>
-            <View style={{ justifyContent: 'center' }}>  <Image source={require('../../Icons/locationIcon.png')} /></View>
+            <View style={{ justifyContent: 'center' }}>  <Image source={require('../../Icons/locationIcon.png')} style={{width: 13, height: 13}}/></View>
             <View style={{ justifyContent: 'center' }}>
               <Text style={styles.headerText_1}>
                 {manuallyAddress == 'true' ? (
@@ -573,7 +573,7 @@ const SummaryScreen = ({ route }) => {
 
           </View> */}
         </View>
-        {isVisible ? <TouchableOpacity style={styles.buttonBottom} onPress={() => paymentBtn()}>
+        {isVisible ? <TouchableOpacity style={styles.buttonBottom} onPress={async () => await paymentBtn()}>
           <Text style={styles.buttonText}>Proceed to pay </Text>
         </TouchableOpacity> :
           <TouchableOpacity style={styles.buttonBottom} onPress={() => selectSlot()}>
@@ -605,14 +605,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 700,
     lineHeight: 40,
     marginHorizontal: 20,
     color: '#FB923C',
   },
   text_1: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 600,
     lineHeight: 40,
     color: '#1C1B1F',
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
   },
   section_1: {
     width: 'auto',
-    height: 40,
+    height: 'fit-content',
     borderLeftWidth: 1,
     borderLeftColor: '#A09CAB',
     paddingHorizontal: 4,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   text_2: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 600,
     color: '#1C1B1F',
   },
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   text_5: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: 400,
     lineHeight: 15,
     marginHorizontal: 10,
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
   },
 
   text_6: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: 400,
     color: '#FB923C',
     lineHeight: 24,
@@ -732,14 +732,14 @@ const styles = StyleSheet.create({
   },
   section_3: {
     width: '100%',
-    height: 56,
+    height: 'fit-content',
     backgroundColor: '#F7F7F7',
     paddingHorizontal: 20,
     marginVertical: 10,
     paddingVertical: 5,
   },
   text_7: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 600,
     color: '#1C1B1F',
   },
@@ -751,41 +751,41 @@ const styles = StyleSheet.create({
   },
   section_4: {
     width: '100%',
-    height: 114,
+    height: 'fit-content',
     backgroundColor: '#F7F7F7',
     paddingHorizontal: 20,
     marginVertical: 10,
     paddingVertical: 5,
   },
   text_10: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 600,
     color: '#1C1B1F',
-    marginBottom: 10,
+    marginBottom: 6,
   },
 
   text_11: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: 400,
     color: '#000000',
   },
   text_12: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 500,
     color: '#1C1B1F',
   },
   text_13: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 700,
     color: '#1C1B1F',
   },
   text_14: {
-    fontSize: 8,
+    fontSize: 12,
     fontWeight: 400,
     color: '#000000',
   },
   text_15: {
-    fontSize: 8,
+    fontSize: 12,
     fontWeight: 400,
     color: '#FB923C',
     textDecorationLine: 'underline',
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   modalHeaderTitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 400,
     lineHeight: 12,
     letterSpacing: 0,
@@ -1083,7 +1083,7 @@ const styles = StyleSheet.create({
 
   section_5: {
     width: '100%',
-    height: 'auto',
+    height: 'fit-content',
     backgroundColor: '#F7F7F7',
     paddingHorizontal: 20,
     marginVertical: 10,
@@ -1091,7 +1091,7 @@ const styles = StyleSheet.create({
   },
 
   text_16: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 500,
     color: '#1C1B1F',
   },

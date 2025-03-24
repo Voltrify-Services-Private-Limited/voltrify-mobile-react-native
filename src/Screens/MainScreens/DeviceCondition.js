@@ -5,9 +5,7 @@ import {
     Image,
     TextInput,
     TouchableOpacity,
-    Button,
-    Alert,
-    FlatList,
+    ScrollView
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -25,6 +23,7 @@ const DeviceCondition = ({ route }) => {
     const [selectedCountry, setSelectedCountry] = useState('');
     const [conditionId, setConditonId] = useState('');
     const { time_slot } = route.params;
+    const [error, setError] = useState(false);
     //////////////////// Device Condition Get Api /////////////
 
     const getAllCart = async () => {
@@ -112,8 +111,13 @@ const DeviceCondition = ({ route }) => {
     };
 
     const paymentBtn = async() => {
-        navigation.navigate("SelectAddress", { condition_Id: conditionId});
-        await AsyncStorage.setItem('timeSlot', JSON.stringify(time_slot));
+        if (!conditionId) {
+            setError(true);
+        }
+        else{
+            navigation.navigate("SelectAddress", { condition_Id: conditionId});
+            await AsyncStorage.setItem('timeSlot', JSON.stringify(time_slot));
+        }
     }
     return (
         <View style={styles.mainView}>
@@ -125,8 +129,14 @@ const DeviceCondition = ({ route }) => {
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Device Condition</Text>
             </View>
+            <ScrollView 
+                style={{ flex: 1 }} 
+                contentContainerStyle={{ flexGrow: 1, padding: 10 }} 
+                keyboardShouldPersistTaps="handled"
+            >
             <View style={{ padding: 10 }}>
-                <Text style={styles.lableText}>Select Device</Text>
+                {error && <Text style={{ color: 'red' }}>This field is required</Text>}
+                <Text style={styles.lableText}>Select Condition<Text style={{ color: 'red' }}>*</Text></Text>
                 <TouchableOpacity
                     style={styles.dropdownStyle}
                     onPress={() => {
@@ -185,8 +195,9 @@ const DeviceCondition = ({ route }) => {
                         ))}
                     </View>
                 ) : null}
+                
                 <View>
-                    <Text style={styles.lableText}>User Description</Text>
+                    <Text style={styles.lableText}>Device Description</Text>
                     <TextInput
                         style={styles.textarea}
                         multiline
@@ -228,6 +239,7 @@ const DeviceCondition = ({ route }) => {
                     <Text style={styles.buttonText}> Submit </Text>
                 </TouchableOpacity>
             </View>
+            </ScrollView>
         </View>
     );
 };
@@ -278,7 +290,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     textarea: {
-        height: 150, // Adjust height as needed
+        height: 130, // Adjust height as needed
         borderColor: '#FB923C',
         borderWidth: 1,
         color: '#000',

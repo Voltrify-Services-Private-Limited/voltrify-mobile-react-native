@@ -41,13 +41,13 @@ const AccountScreen = ({route}) => {
               <Text style={styles.numberText}>+91 {user_number}</Text>
             </View>
           </View>
-          <View style={styles.rightSide}>
+          {/* <View style={styles.rightSide}>
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => navigation.navigate('EditProfile')}>
               <Image source={require('../../Icons/edit.png')} />
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
         {/* <TouchableOpacity
           style={styles.listItem}

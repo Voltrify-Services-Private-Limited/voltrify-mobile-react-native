@@ -87,8 +87,8 @@ const OrderScreen = ({ route }) => {
         <View style={{ marginHorizontal: 5 }}>
         <Text style={styles.text_2}>{item.name}</Text>
         <Text style={styles.text_2}>{item.service_type}</Text>
+          <Text style={styles.text_3}>Visiting Charge ₹{item.visiting_charge}</Text>
           <Text style={styles.text_1}>{item.status}</Text>
-          <Text style={styles.text_3}>Visiting Charge (₹{item.visiting_charge})</Text>
         </View>
       </View>
       <View style={{ justifyContent: 'center' }}>
@@ -105,7 +105,7 @@ const OrderScreen = ({ route }) => {
       <View style={styles.searchBar}>
         <Image
           source={require('../../Icons/searchIcon.png')}
-          style={{ marginVertical: 10 }}
+          style={{ width: 14, height: 14 }}
         />
         <TextInput
           placeholder="Search"
@@ -152,8 +152,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderColor: '#FB923C',
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 10,
-    marginVertical: 10,
+    marginVertical: 5,
     marginHorizontal: 10,
   },
   searchInput: {
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     textAlign: 'center',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 700,
     color: '#FB923C',
   },
@@ -179,20 +180,20 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   text_1: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: 500,
     color: '#A09CAB',
     lineHeight: 16,
     textTransform:'capitalize',
   },
   text_2: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: 600,
     color: '#000000',
     lineHeight: 14.4,
   },
   text_3: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 600,
     color: '#000',
   },

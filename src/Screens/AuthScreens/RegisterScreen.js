@@ -58,13 +58,13 @@ const RegisterScreen = props => {
         // Parse the response as JSON
         const result = await res.json();
 
-        console.log('opt res --- ', result);
+        console.log('register res: ', result);
 
         // Check if registration was successful and handle OTP
         if (result.statusCode === 201) {
           generateOtp();
         } else {
-          ToastAndroid.show('Please check the number!', ToastAndroid.BOTTOM);
+          ToastAndroid.show('Phone number is already registered!', ToastAndroid.BOTTOM);
         }
       }
     } catch (err) {
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     textAlign: 'left',
-    color: '#00000066',
+    color: '#000000',
     width: '100%',
   },
   second_view: {

@@ -8,7 +8,7 @@ import {
   PermissionsAndroid,
   Platform,
   ActivityIndicator,
-  Modal
+  Modal,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import {AuthContext} from '../../Component/AuthContext';
@@ -20,6 +20,8 @@ import {
   isLocationEnabled,
   promptForEnableLocationIfNeeded,
 } from 'react-native-android-location-enabler';
+import Loader from '../../Component/Loader';
+import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 
 const LocationScreen = ({route}) => {
   const [loading, setLoading] = useState(false);
@@ -85,20 +87,22 @@ const LocationScreen = ({route}) => {
   // Request location permission on Android
   const requestLocationPermission = async () => {
     try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Location Permission',
-          message: 'We need access to your location to get your address.',
-        },
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('Location permission granted');
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'We need access to your location to get your address.',
+          },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
       } else {
-        console.log('Location permission denied');
+        const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        return result === RESULTS.GRANTED;
       }
     } catch (err) {
-      console.warn(err);
+      console.warn('Permission error:', err);
+      return false;
     }
   };
 
@@ -107,30 +111,54 @@ const LocationScreen = ({route}) => {
     return new Promise((resolve, reject) => {
       setLoading(true); // Show loader
 
-      Geolocation.getCurrentPosition(
-        position => {
-          const {latitude, longitude} = position.coords;
-          setLocation({latitude, longitude, error: null});
+      if (Platform.OS === 'android') {
+        isLocationEnabled().then(enabled => {
+          if (!enabled) {
+            promptForEnableLocationIfNeeded()
+              .then(() => {
+                requestLocation(); // Retry after enabling GPS
+              })
+              .catch(err => {
+                console.log('GPS Enablement Error:', err);
+                setLoading(false);
+                reject(err);
+              });
+          } else {
+            requestLocation();
+          }
+        });
+      } else {
+        requestLocation(); // iOS: Directly request location
+      }
 
-          fetchAddress(latitude, longitude)
-            .then(address => {
-              setUserAddress(address); // Ensure state updates
-              setLoading(false); // Hide loader after fetching address
-              resolve(address); // Return the address
-            })
-            .catch(err => {
+      const requestLocation = () => {
+        Geolocation.getCurrentPosition(
+          async position => {
+            const {latitude, longitude} = position.coords;
+            console.log('Location:', position);
+
+            setLocation({latitude, longitude, error: null});
+
+            try {
+              const address = await fetchAddress(latitude, longitude);
+              setUserAddress(address);
+              resolve(address);
+            } catch (err) {
               console.log('Address Fetch Error:', err);
-              setLoading(false);
               reject(err);
-            });
-        },
-        error => {
-          setLocation(prevState => ({...prevState, error: error.message}));
-          setLoading(false);
-          reject(error);
-        },
-        {enableHighAccuracy: true, timeout: 90000, maximumAge: 10000},
-      );
+            } finally {
+              setLoading(false);
+            }
+          },
+          error => {
+            console.log('Geolocation Error:', error);
+            setLocation(prevState => ({...prevState, error: error.message}));
+            setLoading(false);
+            reject(error);
+          },
+          {enableHighAccuracy: false, timeout: 15000, maximumAge: 60000},
+        );
+      };
     });
   };
 
@@ -154,38 +182,13 @@ const LocationScreen = ({route}) => {
     });
   };
 
-  async function checkGPSEnabled() {
-    if (Platform.OS === 'android') {
-      const checkEnabled = await isLocationEnabled();
-      console.log('checkEnabled', checkEnabled);
-      return checkEnabled;
-    }
-    return false;
-  }
-  async function enabledGPSPopup() {
-    try {
-      const enableResult = await promptForEnableLocationIfNeeded();
-      console.log('enableResult', enableResult);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(error.message);
-      }
-    }
-  }
   const LocationLogin = async () => {
-    const isGPSEnabled = await checkGPSEnabled();
-    if (!isGPSEnabled) {
-      if (Platform.OS === 'android') {
-        await enabledGPSPopup();
-      }
-    }
-    // Ensure location fetching completes
     const address = await getCurrentPosition();
 
     if (address) {
-      await AsyncStorage.setItem('latitude', JSON.stringify(address)); // Store the fetched address
-      setUserId(); // Set user ID only after address is fetched
-      login(tokens); // Ensure login happens after all async tasks complete
+      await AsyncStorage.setItem('latitude', JSON.stringify(address));
+      setUserId();
+      login(tokens);
     } else {
       console.log('address:', address);
 
@@ -199,24 +202,15 @@ const LocationScreen = ({route}) => {
     login(tokens);
   };
 
-  const Loader = ({ visible }) => {
-    return (
-      <Modal transparent={true} animationType="fade" visible={visible}>
-        <View style={styles.container}>
-          <View style={styles.loader}>
-            <ActivityIndicator size="large" color="#2F80ED" />
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
   return (
     <View style={styles.main_view}>
       {loading && <Loader visible={loading} />}
       <View style={{top: 92, alignItems: 'center', justifyContent: 'center'}}>
         <Text style={styles.text_1}>Welcome to</Text>
-        <Image source={require('../../Icons/text_logo1.png')} />
+        <Image
+          source={require('../../Icons/white-voltrify-logo.png')}
+          style={{width: 196, height: 49}}
+        />
         <Text style={styles.text_1}>Your One Stop Solution</Text>
       </View>
       <View style={styles.second_view}>
@@ -246,7 +240,10 @@ const LocationScreen = ({route}) => {
         <Text style={styles.text_4}>
           Please enable your location {'\n'} so that we can serve you better
         </Text>
-        <Image source={require('../../Icons/Group.png')} />
+        <Image
+          source={require('../../Icons/hugeicons_maps-location-012.png')}
+          style={{width: 200, height: 200}}
+        />
         <TouchableOpacity
           style={[styles.button]}
           onPress={() => LocationLogin()}>

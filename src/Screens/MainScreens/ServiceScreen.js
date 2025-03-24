@@ -97,7 +97,7 @@ const ServiceScreen = ({ route }) => {
       <View style={styles.topHeader}>
         <View style={styles.headerLeft}>
           <View style={{ justifyContent: 'center' }}>
-            <Image source={require('../../Icons/locationIcon.png')} />
+            <Image source={require('../../Icons/locationIcon.png')} style={{width: 12, height: 13.5}}/>
           </View>
             <View style={{ justifyContent: 'center' }}>
                     {manuallyAddress == 'true' ? (
@@ -122,13 +122,13 @@ const ServiceScreen = ({ route }) => {
             <Image source={require('../../Icons/well.png')} />
           </TouchableOpacity> */}
           <TouchableOpacity onPress={() => navigation.navigate('YourCart')} style={styles.iconButton}>
-            <Image source={require('../../Icons/oderIcon.png')} />
+            <Image source={require('../../Icons/cartIcon.png')} style={{width: 13, height: 13}}/>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* <View style={styles.searchBar}>
-        <Image source={require('../../Icons/searchIcon.png')} style={{ marginVertical: 10 }} />
+        <Image source={require('../../Icons/searchIcon.png')} style={{ width: 14, height: 14, marginVertical: 10 }} />
         <TextInput
           placeholder="Search for ‘AC Repair’"
           placeholderTextColor="#00000066"

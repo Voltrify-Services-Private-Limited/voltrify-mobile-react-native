@@ -155,10 +155,9 @@ const DashboardScreen = ({ route }) => {
         <Text style={styles.cardNameText}>
           {item.name}
         </Text>
-        <Text style={styles.cardText2}>
-          {/* {item.description} */}
+        {/* <Text style={styles.cardText2}>
           {item.description.length > 80 ? `${item.description.substring(0, 50)}...` : item.description}
-        </Text>
+        </Text> */}
         {/* <View style={{ flexDirection: 'row' }}>
           <Image source={require('../../Icons/starfill.png')} />
           <Image source={require('../../Icons/starfill.png')} />
@@ -172,8 +171,7 @@ const DashboardScreen = ({ route }) => {
             justifyContent: 'space-between',
             marginVertical: 3,
           }}>
-          <Text style={styles.text_3}>₹{item.price}
-            <Text style={styles.text_2}> + ₹{item.visitingCharge}(visit)</Text>
+          <Text style={styles.text_3}>₹{item.price} + ₹{item.visitingCharge}(visit)
           </Text>
           
         </View>
@@ -342,7 +340,7 @@ const DashboardScreen = ({ route }) => {
       <View style={styles.topHeader}>
         <View style={styles.headerLeft}>
           <View style={{ justifyContent: 'center' }}>
-            <Image source={require('../../Icons/locationIcon.png')} />
+            <Image source={require('../../Icons/locationIcon.png')} style={{width: 12, height: 13.5}}/>
           </View>
           <View style={{ justifyContent: 'center' }}>
             {manuallyAddress == 'true' ? (
@@ -374,14 +372,14 @@ const DashboardScreen = ({ route }) => {
           <TouchableOpacity
             onPress={() => navigation.navigate('YourCart')}
             style={styles.iconButton}>
-            <Image source={require('../../Icons/oderIcon.png')} />
+            <Image source={require('../../Icons/cartIcon.png')} style={{width: 13, height: 13}}/>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchBar}>
-        <Image source={require('../../Icons/searchIcon.png')} style={{ marginVertical: 10 }} />
+        <Image source={require('../../Icons/searchIcon.png')} style={{ width: 14, height: 14, marginVertical: 10 }}/>
         <TextInput
           placeholder="Search"
           placeholderTextColor="#00000066"
@@ -454,7 +452,7 @@ const DashboardScreen = ({ route }) => {
                 setPage(prevPage => prevPage + 1); // Increment page number when the end is reached
               }
             }}
-            onEndReachedThreshold={0.5} // Trigger when the list is 50% from the end
+            onEndReachedThreshold={0.7} // Trigger when the list is 50% from the end
             ListFooterComponent={loading ? (<View style={{ justifyContent: 'center', marginVertical: 40, alignItems: 'center' }}><ActivityIndicator size="large" color="#FB923C" /></View>) : (null)} // Show loader at the bottom
           />
 
@@ -511,6 +509,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 10,
     marginBottom:10,
+    alignItems: 'center',
   },
   searchInput: {
     fontSize: 12,
@@ -524,7 +523,7 @@ const styles = StyleSheet.create({
     height: 160,
   },
   heading1: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 600,
     color: '#1C1B1F',
   },
@@ -546,22 +545,23 @@ const styles = StyleSheet.create({
     height: 72.18,
     borderRadius: 10,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
   },
   cardText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 600,
     lineHeight: 15.73,
     marginVertical: 25,
   },
   sliderList: {
     marginVertical: 5,
-    height: 145,
+    height: "fit-content",
   },
   servicesSliderList: {
     marginVertical: 5,
-    height: 200,
+    height: 'fit-content',
   },
   sliderCard: {
     flexDirection: 'row',
@@ -569,19 +569,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardBox: {
-    width: 110,
+    width: 120,
     height: 'auto',
     marginHorizontal: 5,
   },
   cardText2: {
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: 600,
     lineHeight: 12,
   },
   text_3: {
     fontSize: 12,
-    fontWeight: 800,
-    lineHeight: 24,
+    fontWeight: 600,
+    // lineHeight: 24,
   },
   text_2: {
     fontSize: 10,
@@ -589,10 +589,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   cardNameText: {
-    fontSize: 10,
-    fontWeight: 700,
-    marginBottom: 4,
-    lineHeight: 12,
+    fontSize: 13,
+    fontWeight: 600,
+    // marginBottom: 4,
+    // lineHeight: 12,
     marginTop: 4,
   },
 });

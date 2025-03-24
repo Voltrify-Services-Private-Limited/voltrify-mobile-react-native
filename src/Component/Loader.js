@@ -1,35 +1,28 @@
-import {View, Text, Modal, StyleSheet, Dimensions} from 'react-native';
+import {View, Text, Modal, StyleSheet, ActivityIndicator} from 'react-native';
 import React from 'react';
-import {ActivityIndicator} from 'react-native-paper';
-const Width = Dimensions.get('window').width;
-const Height = Dimensions.get('window').height;
+// import {ActivityIndicator} from 'react-native-paper';
 const Loader = ({visible}) => {
   return (
-    <Modal visible={visible} transparent>
-      <View style={Styles.modalView}>
-        <View style={Styles.mainView}>
-          <ActivityIndicator size={'large'} />
+    <Modal transparent={true} animationType="fade" visible={visible}>
+      <View style={styles.container}>
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color="#2F80ED" />
         </View>
       </View>
     </Modal>
   );
 };
-
-const Styles = StyleSheet.create({
-  modalView: {
-    width: Width,
-    height: Height,
-    backgroundColor: 'rgba(0,0,0,.6)',
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark semi-transparent overlay
   },
-  mainView: {
-    width: 100,
-    height: 100,
-    backgroundColor: '#fff',
-    borderRadius: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
+  loader: {
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
   },
 });
 

@@ -3,23 +3,21 @@ import {
   StyleSheet,
   Text,
   View,
-  Dimensions,
-  PixelRatio,
-  StatusBar,
   Image,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showToast } from '../../Component/Toast';
 import { useNavigation } from '@react-navigation/native';
 import IndianFlag from '../../SvgImage/IndianFlag';
+import Loader from '../../Component/Loader';
 const LoginScreenMobile = ({route}) => {
   const navigation = useNavigation();
   const [warning, setWarning] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [phone_number, setPhoneNumber] = useState();
 
@@ -28,41 +26,24 @@ const LoginScreenMobile = ({route}) => {
     console.log(phone_number);
   };
 
-  // const generateOtp = async () => {
-  //   try {
-  //     const response = await axios.post('http://api.voltrify.in/otp/generate-otp', {
-  //       phone_number: phone_number,
-  //     });
-
-  //     // Assuming the token is returned in the response.data.token
-  //     if (response) {
-  //       Alert.alert(JSON.stringify(response));
-  //       await AsyncStorage.setItem('phoneNumber', JSON.stringify(phone_number));
-  //       navigation.navigate('OtpScreen');
-  //     } else {
-  //       Alert.alert('No otp returned.');
-  //     }
-  //   } catch (err) {
-  //     Alert.alert('Error generating otp: ' + JSON.stringify(err.message));
-  //   }
-  // };
-
   const UserLoginApi = async () => {
     try {
+      setLoading(true);
       console.log('enter UserLoginApi', phone_number);
-    
+  
       const url = 'https://api.voltrify.in/otp/generate-otp';
-      result = await fetch(url, {
+      const result = await fetch(url, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone_number: phone_number,
         }),
       });
+  
       console.log('before response', result);
-
-      response = await result.json();
+      const response = await result.json();
       console.log('response', response);
+  
       if (response.statusCode === 404) {
         setWarning(true);
         return false;
@@ -70,7 +51,10 @@ const LoginScreenMobile = ({route}) => {
       console.log('login data', response);
       return true;
     } catch (error) {
-      console.error(error);
+      console.log("Error:", error);
+      return false;  // Return false to indicate failure
+    } finally {
+      setLoading(false);  // Always stop loading
     }
   };
 
@@ -99,9 +83,10 @@ const LoginScreenMobile = ({route}) => {
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       style={styles.main_view}>
+      {loading && <Loader visible={loading} />}
       <View style={{top: 92, alignItems: 'center', justifyContent: 'center'}}>
         <Text style={styles.text_1}>Welcome to</Text>
-        <Image source={require('../../Icons/text_logo1.png')} />
+        <Image source={require('../../Icons/white-voltrify-logo.png')} style={{ width: 196, height: 49 }}/>
         <Text style={styles.text_1}>Your One Stop Solution</Text>
       </View>
       <View style={styles.second_view}>

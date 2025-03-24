@@ -50,7 +50,7 @@ const ServiceDetails = ({ route }) => {
   }
 
   useEffect(() => {
-    getAllService('REPAIR');
+    getAllService('');
 
   }, []);
 
@@ -141,12 +141,13 @@ const ServiceDetails = ({ route }) => {
           justifyContent: 'space-between',
           width: 'auto',
           paddingBottom: 5,
+          alignItems: 'center',
         }}>
         <View>
           <Text style={styles.contentText4}>{item.name}</Text>
           <Text style={styles.contentText6} >{item.description.length > 15 ? `${item.description.substring(0, 50)}...` : item.description}</Text>
-          <Text style={styles.contentText5}>Service charge starts at ₹{item.price}</Text>
           <Text style={styles.contentText7}>Visit charge ₹{item.visitingCharge}</Text>
+          <Text style={styles.contentText5}>Service charge starts at ₹{item.price}</Text>
         </View>
         <View style={{ marginHorizontal: 5 }}>
           <Image source={
@@ -154,7 +155,7 @@ const ServiceDetails = ({ route }) => {
               ? { uri: item.deviceImage[0] }
               : require('../../Icons/serviceImage.png')
           }
-            style={{ width: 50, borderRadius: 5, height: 50, }} />
+            style={{ width: 80, borderRadius: 5, height: 70, }} />
           <TouchableOpacity style={styles.addBtn} onPress={() => { createCart(item.id), navigateOther(item.id) }}>
             <Text style={styles.addBtnText}>Book</Text>
           </TouchableOpacity>
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   serviceContent: {
-    top: 150,
+    top: 95,
   },
   content: {
     marginHorizontal: 10,
@@ -337,12 +338,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#A09CAB',
   },
   contentText4: {
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: 600,
     color: '#1C1B1F',
   },
   contentText5: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 700,
     color: '#FB923C',
     marginTop: 5,
@@ -353,24 +354,24 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   contentText7: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: 700,
     color: '#4ADE80',
     marginTop: 5,
   },
   addBtn: {
-    width: 30,
-    height: 12,
+    width: 70,
+    height: 25,
     borderWidth: 0.5,
     alignSelf: 'center',
-    marginTop: -6,
+    marginTop: -15,
     backgroundColor: '#FFFFFF',
     borderColor: '#A09CAB',
     borderRadius: 4,
     justifyContent: 'center',
   },
   addBtnText: {
-    fontSize: 6,
+    fontSize: 14,
     fontWeight: 400,
     color: '#FB923C',
     textAlign: 'center',

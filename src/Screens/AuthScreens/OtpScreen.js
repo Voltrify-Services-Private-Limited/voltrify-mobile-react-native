@@ -1,25 +1,19 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useRef, useState} from 'react';
 import {
   StyleSheet,
   Text,
   View,
-  Dimensions,
-  PixelRatio,
-  StatusBar,
   Image,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { tokens } from 'react-native-paper/lib/typescript/styles/themes/v3/tokens';
-import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+import {useNavigation} from '@react-navigation/native';
+import Loader from '../../Component/Loader';
 
-
-const OtpScreen = ({ route }) => {
+const OtpScreen = ({route}) => {
   const navigation = useNavigation();
   const et1 = useRef();
   const et2 = useRef();
@@ -33,121 +27,85 @@ const OtpScreen = ({ route }) => {
   const [f4, setF4] = useState('');
   const [f5, setF5] = useState('');
   const [f6, setF6] = useState('');
-  const [user, setUser] = useState('');
-  const { phoneNumber } = route.params;
+  const [loading, setLoading] = useState(false);
+  const {phoneNumber} = route.params;
 
   const otpNumber = f1 + f2 + f3 + f4 + f5 + f6;
 
-  // useEffect(() => {
-  //   getProfile_id();
-  // }, []);
-
-  const UserLoginApi = async () => {
-    // navigation.navigate('LocationScreen');
-    const url = 'http://api.voltrify.in/auth/user/generate-token';
-    result = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phoneNumber: phoneNumber,
-        otp: otpNumber,
-      }),
-    });
-
-    response = await result.json();
-    console.log('login data', response.data.accessToken);
-    await AsyncStorage.setItem('access_token', JSON.stringify(response.data.accessToken.token));
-    await AsyncStorage.setItem('refresh_token', JSON.stringify(response.data.refreshToken.token));
-    navigation.navigate('LocationScreen');
-  };
-
-
-  // Function to request a token from the API
-  // const generateToken = async () => {
-  //   const phoneNumber = await AsyncStorage.getItem('phoneNumber');
-  //   const phone_number = JSON.parse(phoneNumber)
-  //   try {
-  //     const response = await axios.post('http://api.voltrify.in/auth/user/generate-token', {
-  //       phoneNumber: phone_number,
-  //       otp: otpNumber,
-  //     });
-
-  //     // Assuming the token is returned in the response.data.token
-  //     if (response) {
-  //       navigation.navigate('LocationScreen');
-  //       Alert.alert(JSON.stringify(response.data.data.accessToken.token));
-  //       await AsyncStorage.setItem('access_token', JSON.stringify(response.data.data.accessToken.token));
-        
-  //     } else {
-  //       Alert.alert('No token returned.');
-  //     }
-  //   } catch (err) {
-  //     // Alert.alert('Error generating token: ' + JSON.stringify(err.message));
-  //   }
-  // };
-
   const VerifyOtpApi = async () => {
+    setLoading(true); // Start loading
     await AsyncStorage.setItem('phoneNumber', JSON.stringify(phoneNumber));
+
     try {
       const data = {
         phoneNumber: phoneNumber,
         otp: otpNumber,
       };
 
-      // Prepare the body of the request
-      const body = new URLSearchParams(data).toString();
+      // Use JSON stringify for better API compatibility instead of `URLSearchParams`
+      const body = JSON.stringify(data);
 
       // Perform the fetch request
-      const res = await fetch('http://api.voltrify.in/auth/user/generate-token',
+      const res = await fetch(
+        'http://api.voltrify.in/auth/user/generate-token',
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json', // Changed to application/json
           },
           body: body,
         },
       );
 
-      // Check if the response is OK (status code 200-299)
+      // Check if response is OK (status code 200-299)
       if (!res.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP error! Status: ${res.status}`); // Log actual status code
       }
 
       // Parse the response as JSON
       const result = await res.json();
+      console.log('OTP response:', result);
 
-      console.log('otp data set res --- ', result);
+      // Check if OTP verification was successful
+      if (result.statusCode === 200 && result.data) {
+        await AsyncStorage.setItem(
+          'access_token',
+          JSON.stringify(result.data.accessToken.token),
+        );
+        await AsyncStorage.setItem(
+          'refresh_token',
+          JSON.stringify(result.data.refreshToken.token),
+        );
 
-      // Check if OTP generation was successful
-      if (result.statusCode === 200) {
-        // await AsyncStorage.setItem('userData', JSON.stringify(result.data));
-        // Store tokens securely
-        await AsyncStorage.setItem('access_token', JSON.stringify(result.data.accessToken.token));
-        await AsyncStorage.setItem('refresh_token', JSON.stringify(result.data.refreshToken.token));
         navigation.navigate('LocationScreen', {
           tokens: result.data.accessToken.token,
         });
       } else {
-        ToastAndroid.show('Something Wrong!', ToastAndroid.BOTTOM);
+        ToastAndroid.show('Something went wrong!', ToastAndroid.SHORT);
       }
     } catch (err) {
       ToastAndroid.show(
-        'Please check the credentials or try again later!',
-        ToastAndroid.BOTTOM,
+        'Please check your credentials or try again later!',
+        ToastAndroid.SHORT,
       );
-      console.log('Get OTP error ---- ', err);
+      console.log('OTP verification error:', err);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
-  ///////////// Profile Id ///////////////
   return (
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       style={styles.main_view}>
-      <View style={{ top: 92, alignItems: 'center', justifyContent: 'center' }}>
+      {loading && <Loader visible={loading} />}
+      <View style={{top: 92, alignItems: 'center', justifyContent: 'center'}}>
         <Text style={styles.text_1}>Welcome to</Text>
-        <Image source={require('../../Icons/text_logo1.png')} />
+        <Image
+          source={require('../../Icons/white-voltrify-logo.png')}
+          style={{width: 196, height: 49}}
+        />
         <Text style={styles.text_1}>Your One Stop Solution</Text>
       </View>
       <View style={styles.second_view}>
@@ -171,7 +129,7 @@ const OtpScreen = ({ route }) => {
         <Text style={styles.text_4}>
           Please enter your OTP {'\n'}sent on your mobile number
         </Text>
-        <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+        <View style={{flexDirection: 'row', justifyContent: 'center'}}>
           <View style={styles.input_box}>
             <TextInput
               placeholderTextColor="black"
@@ -181,7 +139,7 @@ const OtpScreen = ({ route }) => {
               keyboardType="numeric"
               style={[
                 styles.inputOtp,
-                { borderColor: f1.length >= 1 ? '#FB923C' : '#D7D7D7' },
+                {borderColor: f1.length >= 1 ? '#FB923C' : '#D7D7D7'},
               ]}
               onChangeText={txt => {
                 setF1(txt);
@@ -200,7 +158,7 @@ const OtpScreen = ({ route }) => {
               keyboardType="numeric"
               style={[
                 styles.inputOtp,
-                { borderColor: f2.length >= 1 ? '#FB923C' : '#D7D7D7' },
+                {borderColor: f2.length >= 1 ? '#FB923C' : '#D7D7D7'},
               ]}
               onChangeText={txt => {
                 setF2(txt);
@@ -221,7 +179,7 @@ const OtpScreen = ({ route }) => {
               keyboardType="numeric"
               style={[
                 styles.inputOtp,
-                { borderColor: f3.length >= 1 ? '#FB923C' : '#D7D7D7' },
+                {borderColor: f3.length >= 1 ? '#FB923C' : '#D7D7D7'},
               ]}
               onChangeText={txt => {
                 setF3(txt);
@@ -242,7 +200,7 @@ const OtpScreen = ({ route }) => {
               keyboardType="numeric"
               style={[
                 styles.inputOtp,
-                { borderColor: f4.length >= 1 ? '#FB923C' : '#D7D7D7' },
+                {borderColor: f4.length >= 1 ? '#FB923C' : '#D7D7D7'},
               ]}
               onChangeText={txt => {
                 setF4(txt);
@@ -263,7 +221,7 @@ const OtpScreen = ({ route }) => {
               keyboardType="numeric"
               style={[
                 styles.inputOtp,
-                { borderColor: f5.length >= 1 ? '#FB923C' : '#D7D7D7' },
+                {borderColor: f5.length >= 1 ? '#FB923C' : '#D7D7D7'},
               ]}
               onChangeText={txt => {
                 setF5(txt);
@@ -284,7 +242,7 @@ const OtpScreen = ({ route }) => {
               keyboardType="numeric"
               style={[
                 styles.inputOtp,
-                { borderColor: f6.length >= 1 ? '#FB923C' : '#D7D7D7' },
+                {borderColor: f6.length >= 1 ? '#FB923C' : '#D7D7D7'},
               ]}
               onChangeText={txt => {
                 setF6(txt);
@@ -297,7 +255,9 @@ const OtpScreen = ({ route }) => {
             />
           </View>
         </View>
-        <TouchableOpacity style={[styles.button]} onPress={() => VerifyOtpApi()}>
+        <TouchableOpacity
+          style={[styles.button]}
+          onPress={() => VerifyOtpApi()}>
           <Text style={styles.text_5}>Submit</Text>
         </TouchableOpacity>
         <Text style={styles.text_6}>Resend OTP</Text>
