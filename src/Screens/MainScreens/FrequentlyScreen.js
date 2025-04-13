@@ -1,14 +1,19 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
-import React from 'react';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity } from 'react-native';
+import React, {useState} from 'react';
 
 const FrequentlyScreen = props => {
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const faqData = [
+    {
+      question: 'What are the charges for different services?',
+      answer: 'The charges vary based on the type of service. You can view pricing on the services page.',
+    },
+    {
+      question: 'Can I pay online after the service is done?',
+      answer: 'Yes, we support UPI, cards, and other online payment methods after service completion.',
+    },
+    // Add more FAQs as needed
+  ];
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
@@ -23,7 +28,7 @@ const FrequentlyScreen = props => {
       <View style={styles.searchBar}>
         <Image
           source={require('../../Icons/searchIcon.png')}
-          style={{marginVertical: 10}}
+          style={{marginVertical: 10, width: 14, height: 14}}
         />
         <TextInput
           placeholder="Search"
@@ -31,23 +36,31 @@ const FrequentlyScreen = props => {
           style={styles.searchInput}
         />
       </View>
-      <View style={styles.listItem}>
-        <Text style={styles.listText}>
-          What are the charges for different services
-        </Text>
-        <Image source={require('../../Icons/rightArrow.png')} />
-      </View>
-      <View style={styles.listItem}>
-        <Text style={styles.listText}>
-          Can i pay online after service is done
-        </Text>
-        <Image source={require('../../Icons/rightArrow.png')} />
-      </View>
+      
+      {faqData.map((item, index) => (
+        <View key={index} style={styles.listItem}>
+          <TouchableOpacity
+            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+            onPress={() => setExpandedIndex(index === expandedIndex ? null : index)}>
+            <Text style={styles.listText}>{item.question}</Text>
+            <Image source={require('../../Icons/rightArrow.png')} />
+          </TouchableOpacity>
+          {expandedIndex === index && (
+            <Text style={styles.answerText}>{item.answer}</Text>
+          )}
+        </View>
+      ))}
     </View>
   );
 };
 export default FrequentlyScreen;
 const styles = StyleSheet.create({
+  answerText: {
+    color: '#444',
+    fontSize: 14,
+    marginTop: 5,
+    paddingHorizontal: 5,
+  },
   mainView: {
     flex: 1,
     backgroundColor: '#ffffff',
@@ -90,10 +103,11 @@ const styles = StyleSheet.create({
     lineHeight: 14.4,
   },
   listItem: {
+    display: 'flex',
     borderBottomWidth: 0.2,
     marginHorizontal: 10,
     borderBottomColor: '#A09CAB',
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     paddingVertical: 20,
   },

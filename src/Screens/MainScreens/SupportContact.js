@@ -1,14 +1,9 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 const SupportContact = ({route}) => {
+  const navigation = useNavigation();
   return (
     <View style={styles.mainView}>
       <View style={styles.topHeader}>
@@ -33,7 +28,7 @@ const SupportContact = ({route}) => {
             <Text style={styles.lable}>Email Id : </Text>
           </View>
           <View style={{justifyContent: 'center'}}>
-            <Text style={styles.value}>complaint@voltrify.in</Text>
+            <Text style={styles.value}>info@voltrify.in</Text>
           </View>
         </View>
         <View

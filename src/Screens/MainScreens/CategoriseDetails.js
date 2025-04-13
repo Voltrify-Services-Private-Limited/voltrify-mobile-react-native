@@ -1,14 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  ProgressBarAndroid,
-  ScrollView,
-  FlatList,
-} from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';

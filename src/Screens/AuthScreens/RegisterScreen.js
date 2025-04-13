@@ -36,6 +36,18 @@ const RegisterScreen = props => {
       ) {
         ToastAndroid.show('Some fields are empty!', ToastAndroid.BOTTOM);
       } else {
+        if (phoneNumber.length < 10) {
+          ToastAndroid.show('Please enter a valid phone number!', ToastAndroid.BOTTOM);
+          return;
+        }
+        if (firstName.length < 3) {
+          ToastAndroid.show('Please enter a valid first name!', ToastAndroid.BOTTOM);
+          return;
+        }
+        if (lastName.length < 3) {
+          ToastAndroid.show('Please enter a valid last name!', ToastAndroid.BOTTOM);
+          return;
+        }
         let data = {
           firstName: firstName,
           lastName: lastName,
@@ -50,7 +62,7 @@ const RegisterScreen = props => {
         const res = await fetch('http://api.voltrify.in/auth/user/register', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
           body: body,
         });
@@ -89,7 +101,7 @@ const RegisterScreen = props => {
       const res = await fetch('http://api.voltrify.in/otp/generate-otp', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
         body: body,
       });

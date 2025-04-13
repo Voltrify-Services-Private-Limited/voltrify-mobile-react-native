@@ -20,7 +20,7 @@ const ServiceSearch = props => {
         <View style={styles.searchBar}>
           <Image
             source={require('../../Icons/searchIcon.png')}
-            style={{marginVertical: 10}}
+            style={{marginVertical: 10, width: 14, height: 14}}
           />
           <TextInput
             placeholder="Search for ‘AC Repair’"

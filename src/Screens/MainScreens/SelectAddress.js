@@ -286,10 +286,11 @@ const SelectAddress = ({route}) => {
       const timeSlot = await AsyncStorage.getItem('time_slot');
       const dateSlot = await AsyncStorage.getItem('slot_no_day');
       const cart_id = await AsyncStorage.getItem('cartId');
+      const itemCount = await AsyncStorage.getItem('itemCount');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
       const time = JSON.parse(timeSlot);
       const date = JSON.parse(dateSlot);
-      const url = 'http://api.voltrify.in/user/orders';
+      const url = 'http://192.168.1.10:3000/user/orders';
       result = await fetch(url, {
         method: 'POST',
         headers: {
@@ -305,6 +306,7 @@ const SelectAddress = ({route}) => {
           payment_mode: 'online',
           service_description: service_description,
           date: date,
+          deviceCount: parseInt(itemCount)
         }),
       });
       console.log('order body: ', {
@@ -316,6 +318,7 @@ const SelectAddress = ({route}) => {
         payment_mode: 'online',
         service_description: service_description,
         date: date,
+        deviceCount: parseInt(itemCount)
       });
 
       response = await result.json();

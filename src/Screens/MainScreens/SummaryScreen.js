@@ -1,22 +1,22 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Modal,
-  ImageBackground,
-  FlatList,
-  Alert,
-} from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
+import Counter from '../../Component/Counter';
 
-const SummaryScreen = ({ route }) => {
+const SummaryScreen = ({route}) => {
+  const [servicePrice, setServicePrice] = useState(0);
+  const [discountedServicePrice, setDiscountedServicePrice] = useState(0);
+  const [visitingPrice, setVisitingPrice] = useState(0);
+  const [initialServicePrice, setInitialServicePrice] = useState(0);
+  const [initialVisitingPrice, setInitialVisitingPrice] = useState(0);
+  const [discount, setDiscount] = useState(0);
+  const [discountPrice, setDiscountPrice] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  const [timeSlots, setTimeSlots] = useState(null);
+
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -26,23 +26,21 @@ const SummaryScreen = ({ route }) => {
   const [coupanCode, setCoupanCode] = useState('');
   const [data, setData] = useState([]);
   const [manuallyLocation, setManuallyLocation] = useState('');
-  const [isRefersh, setIsRefersh] = useState(false);
   const [manuallyAddress, setManuallyAddress] = useState('false');
   // State to hold the selected date
   const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedCurrent, setSelectCurrent] = useState(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const selectSlot = () => {
     setModalVisible(!modalVisible);
     setIsVisible(!isVisible);
-  }
-
+  };
+  const [itemCount, setItemCount] = useState(1);
   const paymentBtn = async () => {
-    navigation.navigate("DeviceCondition", { time_slot: selectedCurrent });
-  }
+    navigation.navigate('DeviceCondition', {time_slot: selectedTimeSlot});
+  };
   useEffect(() => {
     getCoupans();
-    console.log(coupanData);
     getServiceId();
     Manually_and_enable();
     service_name();
@@ -50,16 +48,16 @@ const SummaryScreen = ({ route }) => {
   }, []);
 
   const Manually_and_enable = async () => {
-    const manuallyAddress_Key = await AsyncStorage.getItem("manuallyAddress");
+    const manuallyAddress_Key = await AsyncStorage.getItem('manuallyAddress');
     setManuallyAddress(manuallyAddress_Key);
     console.log(manuallyAddress_Key);
     // Check if manuallyAddress is set to true, and accordingly handle locations.
     if (manuallyAddress_Key === 'true') {
-      const manually = await AsyncStorage.getItem("finalAddress");
+      const manually = await AsyncStorage.getItem('finalAddress');
       setManuallyLocation(JSON.parse(manually));
       setCurrentLocation(''); // Clear currentLocation if manuallyLocation is being used
     } else {
-      const latitude = await AsyncStorage.getItem("latitude");
+      const latitude = await AsyncStorage.getItem('latitude');
       setCurrentLocation(JSON.parse(latitude));
       setManuallyLocation(''); // Clear manuallyLocation if currentLocation is being used
     }
@@ -68,34 +66,43 @@ const SummaryScreen = ({ route }) => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-      const serviceId = await AsyncStorage.getItem("serviceId");
-      const latitude = await AsyncStorage.getItem("latitude");
+      const serviceId = await AsyncStorage.getItem('serviceId');
+      const latitude = await AsyncStorage.getItem('latitude');
       const geoLocation = JSON.parse(latitude);
       setCurrentLocation(geoLocation);
       console.log('service id asscc', serviceId);
-      const response = await fetch(`http://api.voltrify.in/service/${serviceId}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json', // Optional, depending on your API requirements
+      const response = await fetch(
+        `http://api.voltrify.in/service/${serviceId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json', // Optional, depending on your API requirements
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const resData = await response.json();
       setData(resData.data);
-      console.log("assbcbkbskc", resData.data)
+      console.log(resData.data[0].price);
+
+      setServicePrice(resData.data[0].price);
+      setVisitingPrice(resData.data[0].visitingCharge);
+      setInitialServicePrice(resData.data[0].price);
+      setInitialVisitingPrice(resData.data[0].visitingCharge);
+      console.log('service data resp: ', resData.data);
     } catch (err) {
       console.log('get Order err --- ', err);
     }
-  }
+  };
 
   const getCoupans = async () => {
     try {
       const userData = await AsyncStorage.getItem('access_token');
-      const latitude = await AsyncStorage.getItem("latitude");
+      const latitude = await AsyncStorage.getItem('latitude');
       const geoLocation = JSON.parse(latitude);
       setCurrentLocation(geoLocation);
       const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
@@ -113,87 +120,78 @@ const SummaryScreen = ({ route }) => {
       }
       const resData = await response.json();
       setCoupanData(resData.data.data);
-      console.log("coupan data", resData.data.data[0]);
+      console.log('coupan data', resData.data.data[0]);
     } catch (err) {
       console.log('Coupans Data err --- ', err);
     }
   };
 
-  const handlePressCode = async (code) => {
-    await AsyncStorage.setItem("coupanCode", code);
+  const handlePressCode = async code => {
+    await AsyncStorage.setItem('coupanCode', code);
     setCoupanCode(code);
-  }
-  const handleSelectItem = (index) => {
+  };
+  const handleSelectItem = index => {
     setSelectedIndex(index); // Set the selected index to change the background color
   };
 
-
-  const CoupannsItem = ({ item, index }) => {
+  const CoupannsItem = ({item, index}) => {
     const backgroundColor = index === selectedIndex ? '#FB923C' : '#d0d0d0';
     const color = index === selectedIndex ? '#000' : '#FB923C';
     return (
-      <View style={{ width: 'auto', marginBottom: 20, marginHorizontal: 5 }}>
-        <TouchableOpacity onPress={() => { handlePressCode(item.code), discountCode1(item.discount), handleSelectItem(index) }}>
-          <View
-            style={[styles.coupanCard, { backgroundColor }]}>
+      <View style={{width: 'auto', marginBottom: 20, marginHorizontal: 5}}>
+        <TouchableOpacity
+          onPress={() => {
+            handlePressCode(item.code),
+              discountCode1(item.discount),
+              handleSelectItem(index);
+          }}>
+          <View style={[styles.coupanCard, {backgroundColor}]}>
             <Text style={styles.name}>{item.name}</Text>
-            <Text style={[styles.dicount, { color }]}>{item.discount}%</Text>
+            <Text style={[styles.dicount, {color}]}>{item.discount}%</Text>
             <Text style={styles.code}>{item.code}</Text>
           </View>
         </TouchableOpacity>
       </View>
     );
-
   };
-  const deviceCondition = async (deviceId) => {
+  const deviceCondition = async deviceId => {
     setModalVisible(!modalVisible);
     await AsyncStorage.setItem('deviceId', deviceId);
-    navigation.navigate("DeviceCondition", { time_slot: selectedCurrent });
-  }
+    navigation.navigate('DeviceCondition', {time_slot: selectedTimeSlot});
+  };
 
-  ////////////// Get Address Start ///////////////
-
-  // const getAddress = async () => {
-  //   const getAdd_1 = await AsyncStorage.getItem("address1");
-  //   const getAdd_2 = await AsyncStorage.getItem("address2");
-  //   const getLandmark = await AsyncStorage.getItem("landmark");
-  //   const getCity = await AsyncStorage.getItem("city");
-  //   const getState = await AsyncStorage.getItem("state");
-  //   const getPincode = await AsyncStorage.getItem("pincode");
-  //   setFlatNo(getAdd_1 + getAdd_2 + getLandmark + getCity + getState + getPincode);
-  // }
-
-  ////////////// Get Address Start ///////////////
-
-  const [priceOriginal, setPriceOrginal] = useState(''); // Original price
-  const [discountCode, setDiscountCode] = useState('');
-  const [visitingPrice, setVisitingPrice] = useState('');
-  const [finalPrice, setFinalPrice] = useState('');
-  const [totalAmout, setTotalAmount] = useState('');
-
-
-  // Start with 12:30 PM
-  const startTime = moment().set('hour', 12).set('minute', 30).set('second', 0).set('millisecond', 0);
-
-  // Create an array to store the times
-  const times = [];
-
-  // Loop to generate the next 12 times, each 1 hour after the previous one
-  for (let i = 0; i < 20; i++) {
-    const time = startTime.clone().add(i, 'hours').format('hh:mm A');
-    times.push(time);
+  function generateTimeSlots(date) {
+    const selectedDate = moment(date, 'DD-MM-YYYY'); // Adjust format as needed
+    const today = moment().startOf('day');
+    const isToday = selectedDate.isSame(today, 'day');
+  
+    // Start at 9:00 AM
+    const startTime = moment()
+      .set({ hour: 9, minute: 0, second: 0, millisecond: 0 });
+  
+    const timeSlots = [];
+  
+    for (let i = 0; i < 12; i++) {
+      const slotTime = startTime.clone().add(i, 'hours');
+  
+      // If it's today and time has passed, skip the slot
+      if (isToday && slotTime.isBefore(moment())) continue;
+  
+      timeSlots.push(slotTime.format('hh:mm A'));
+    }
+    setTimeSlots(timeSlots);
+    return timeSlots;
   }
 
   // State to store the selected time (only one time can be selected at a time)
   // Function to render times in 4 columns
-  const renderTimesInRows = (times) => {
+  const renderTimesInRows = times => {
     let rows = [];
     for (let i = 0; i < times.length; i += 5) {
-      rows.push(times.slice(i, i + 5));  // Slice out each set of 4 times
+      rows.push(times.slice(i, i + 5)); // Slice out each set of 4 times
     }
     return rows;
   };
-
 
   const startDate = moment();
 
@@ -205,125 +203,135 @@ const SummaryScreen = ({ route }) => {
     const day = startDate.clone().add(i, 'days').format('DD-MM-YYYY'); // Add 1 day for each iteration
     daysAndDates.push(day);
   }
-  const renderWeekInRows = (daysAndDates) => {
+  const renderWeekInRows = daysAndDates => {
     let rows = [];
     for (let i = 0; i < daysAndDates.length; i += 5) {
-      rows.push(daysAndDates.slice(i, i + 5));  // Slice out each set of 5 dates
+      rows.push(daysAndDates.slice(i, i + 5)); // Slice out each set of 5 dates
     }
     return rows;
   };
 
-  const handleDateSelect = async (date) => {
-    setSelectedDate(date); // Set the selected date to state
-    await AsyncStorage.setItem("slot_no_day", JSON.stringify(date));
+  const handleDateSelect = async date => {
+    setSelectedDate(date); // Set the selected date to state   
+    await AsyncStorage.setItem('slot_no_day', JSON.stringify(date));
   };
 
-  const handleTimeSelect = async (current) => {
-    setSelectCurrent(current); // Set the selected date to state
-    await AsyncStorage.setItem("time_slot", JSON.stringify(current));
+  const handleTimeSelect = async timeSlot => {
+    setSelectedTimeSlot(timeSlot); // Set the selected date to state
+    await AsyncStorage.setItem('time_slot', JSON.stringify(timeSlot));
   };
 
-
-  const discountCode1 = async (dicount) => {
-    console.log(dicount);
-    const originalPrice = priceOriginal;
-    const discountPercentage = dicount;
-
-    // Calculate the discount price
-    const discountAmount = (originalPrice * discountPercentage) / 100;
-    const discountedPrice = originalPrice - discountAmount;
-    setTotalAmount(discountedPrice);
-    setDiscountCode(discountAmount);
+  const discountCode1 = async discountPer => {
+    setDiscount(discountPer)
+    const discountAmount = (initialServicePrice * itemCount * discountPer) / 100;   
+    setDiscountPrice(discountAmount);
   };
-  const discountPrice1 = async (price) => {
+  
+  const discountPrice1 = async price => {
     setPriceOrginal(price);
-    console.log(price);
-
   };
 
-  const totalItemPrice = async (visitingCharge) => {
-    console.log(visitingCharge);
-    setVisitingPrice(visitingCharge);
-  }
-
-  const finalPricePay = async () => {
-    // Ensure that discountCode and visitingPrice are numeric values
-    const discountPrice = parseFloat(totalAmout) || 0; // Default to 0 if not a valid number
-    const visitingPriceValue = parseFloat(visitingPrice) || 0; // Default to 0 if not a valid number
-
-    // Calculate the total price by adding discount price and visiting price
-    const finalItemPrice = discountPrice + visitingPriceValue;
-
-    // Set the final price to your state or wherever you're storing it
-    setFinalPrice(finalItemPrice);
-
-    // Log the final price for debugging
-    console.log('final Price', finalItemPrice);
-
-    // Save the final price in AsyncStorage (ensure you're saving the correct variable)
-    await AsyncStorage.setItem("final_price", JSON.stringify(finalItemPrice));
+  const applyCoupon = async () => {
     setCoupanModal(!coupanModal);
   };
 
-  const service_type = async (type) => {
-    await AsyncStorage.setItem("serviceType", type);
+  const service_type = async type => {
+    await AsyncStorage.setItem('serviceType', type);
   };
-  const service_name = async (name) => {
-    await AsyncStorage.setItem("serviceName", name);
-  }
+  const service_name = async name => {
+    await AsyncStorage.setItem('serviceName', name);
+  };
 
-  const summaryData = async ({ item }) => {
+  useEffect(() => {
+    setVisitingPrice(initialVisitingPrice * itemCount);
+    setServicePrice(initialServicePrice * itemCount);
+  }, [itemCount]);
 
-    const totalPriceVisiting = item.price + item.visitingCharge;
-    // Alert.alert(JSON.stringify(totalPriceVisiting));
+  useEffect(() => {
+    setTotalPrice(servicePrice + visitingPrice - discountPrice);
+  }, [visitingPrice, servicePrice, discountPrice]);
 
+  useEffect(() => {
+    setDiscountedServicePrice(servicePrice - discountPrice);
+  }, [servicePrice, discountPrice]);
+
+  useEffect(() => {
+    if (discountPrice > 0) {      
+      setDiscountPrice((initialServicePrice * itemCount * discount) / 100);
+    }
+  }, [itemCount])
+  
+  useEffect(() => {    
+    if (selectedDate) {
+      generateTimeSlots(selectedDate);
+    }
+  }, [selectedDate])
+
+  useEffect(() => {
+    const storeItemCount = async () => {
+      try {
+        await AsyncStorage.setItem('itemCount', itemCount.toString()); // convert to string
+      } catch (error) {
+        console.error('Failed to save itemCount', error);
+      }
+    };
+    storeItemCount();
+  }, [itemCount]);
+
+  const summaryData = async ({item}) => {
     return (
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.text_1, { marginLeft: 20, }]}>{item.type}</Text>
+      <View style={{flex: 1}}>
+        <Text style={[styles.text_1, {marginLeft: 20}]}>{item.type}</Text>
         <View style={styles.section_1}>
-          <View style={{ justifyContent: 'center', flex: 1 }}>
+          <View style={{justifyContent: 'center', flex: 1}}>
             <Text style={styles.text_4}>{item.name}</Text>
           </View>
-          <View style={{ flexDirection: 'row' }}>
-            <View style={{ justifyContent: 'center', width: 68 }}>
+          <View style={{flexDirection: 'row', width: 130, justifyContent: "space-between"}}>
+            <Counter count={itemCount} setCount={setItemCount} />
+            <View style={{justifyContent: 'center'}}>
               <Text style={styles.text_4}>₹{item.price}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.section_2}>
-          <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+          <View style={{flexDirection: 'row', justifyContent: 'center'}}>
             <Image source={require('../../Icons/cupan.png')} />
-            <Text style={styles.text_5}>Coupons & Offers : <Text style={{ color: '#FB923C', fontWeight: 'bold', marginLeft: 5, }}>{coupanCode}</Text></Text>
-
+            <Text style={styles.text_5}>
+              Coupons & Offers :{' '}
+              <Text
+                style={{color: '#FB923C', fontWeight: 'bold', marginLeft: 5}}>
+                {coupanCode}
+              </Text>
+            </Text>
           </View>
-          <TouchableOpacity onPress={() => {
-            discountPrice1(item.price),
-              totalItemPrice(item.visitingCharge),
-              service_type(item.type),
-              service_name(item.name),
-              setCoupanModal(true);
-          }}>
+          <TouchableOpacity
+            onPress={() => {
+              discountPrice1(item.price),
+                service_type(item.type),
+                service_name(item.name),
+                setCoupanModal(true);
+            }}>
             <Text style={styles.text_6}>Offers </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.section_4}>
           <Text style={styles.text_10}>Payment summary</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
             <Text style={styles.text_11}>Service Charge</Text>
-            <Text style={styles.text_12}>₹{item.price}</Text>
+            <Text style={styles.text_12}>₹{servicePrice}</Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
             <Text style={styles.text_11}>Discount</Text>
-            {discountCode === '' ? (
+            {discountPrice === 0 ? (
               <Text style={styles.text_12}>₹0</Text>
             ) : (
-              <Text style={styles.text_12}>-₹{discountCode}</Text>
+              <Text style={styles.text_12}>-₹{discountPrice}</Text>
             )}
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
             <Text style={styles.text_11}>Visiting Charge</Text>
-            <Text style={styles.text_12}>₹{item.visitingCharge}</Text>
+            <Text style={styles.text_12}>₹{visitingPrice}</Text>
           </View>
           {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={styles.text_11}>Item Total</Text>
@@ -342,17 +350,13 @@ const SummaryScreen = ({ route }) => {
               borderTopColor: '#A09CAB',
             }}>
             <Text style={styles.text_13}>Total</Text>
-            {finalPrice == "" ? (
-              <Text style={styles.text_13}>₹{totalPriceVisiting}</Text>
-            ) : (
-              <Text style={styles.text_13}>₹{finalPrice}</Text>
-            )}
+            <Text style={styles.text_13}>₹{totalPrice}</Text>
           </View>
         </View>
 
         <View style={styles.section_3}>
           <Text style={styles.text_7}>Cancellation & rechedule</Text>
-          <View style={{ marginVertical: 5 }}>
+          <View style={{marginVertical: 5}}>
             <Text style={styles.text_14}>
               Free cancellation/reschedules if done more than 4 hrs before the
               service.
@@ -364,19 +368,25 @@ const SummaryScreen = ({ route }) => {
         <View>
           <View style={styles.section_5}>
             <View>
-              <Text style={styles.text_16}>Pay Online (Visiting Charge) : <Text>₹{item.visitingCharge}</Text></Text>
+              <Text style={styles.text_16}>
+                Pay Online (Visiting Charge) : <Text>₹{visitingPrice}</Text>
+              </Text>
             </View>
             <View>
-              {totalAmout == "" ? (
-                <Text style={styles.text_16}>Pay to field engineer after service or device inspection {'\n'}(Service charge) : ₹{totalPriceVisiting} </Text>
-              ) : (
-                <Text style={styles.text_16}>Pay to field engineer after service or device inspection {'\n'}(Service charge) : ₹{totalAmout} </Text>
-              )}
+              <Text style={styles.text_16}>
+                Pay to field engineer after service or device inspection {'\n'}
+                (Service charge) : ₹{discountedServicePrice}{' '}
+              </Text>
             </View>
           </View>
-          <View style={[styles.section_5, { flexDirection: 'column' }]}>
-            <Text style={[styles.text_7, { color: '#FB923C', marginRight: 5, }]}>Note :</Text>
-            <Text style={styles.text_7}>Price may increase or decrease on site after device inspection by engineer.</Text>
+          <View style={[styles.section_5, {flexDirection: 'column'}]}>
+            <Text style={[styles.text_7, {color: '#FB923C', marginRight: 5}]}>
+              Note :
+            </Text>
+            <Text style={styles.text_7}>
+              Price may increase or decrease on site after device inspection by
+              engineer.
+            </Text>
           </View>
         </View>
         {/* ================= Coupons Offers Modal Start========= */}
@@ -411,10 +421,12 @@ const SummaryScreen = ({ route }) => {
                 horizontal={true}
                 data={coupanData}
                 renderItem={CoupannsItem}
-                keyExtractor={(item) => '#' + item.id.toString()}
+                keyExtractor={item => '#' + item.id.toString()}
               />
-              <TouchableOpacity style={styles.CoupanbuttonBottom} onPress={() => finalPricePay()}>
-                <Text style={styles.CoupanbuttonText}>Coupan Apply</Text>
+              <TouchableOpacity
+                style={styles.CoupanbuttonBottom}
+                onPress={() => applyCoupon()}>
+                <Text style={styles.CoupanbuttonText}>Coupon Apply</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -449,27 +461,50 @@ const SummaryScreen = ({ route }) => {
                   }}></View>
               </TouchableOpacity>
               <View style={styles.addressView}>
-                <Image source={require('../../Icons/locationIcon.png')} style={{width: 13, height: 13}}/>
-                <View style={{ justifyContent: 'center' }}>
+                <Image
+                  source={require('../../Icons/locationIcon.png')}
+                  style={{width: 13, height: 13}}
+                />
+                <View style={{justifyContent: 'center'}}>
                   {manuallyAddress == 'true' ? (
                     <>
                       <Text style={styles.headerText_1}>
-                      {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
+                        {manuallyLocation.length > 75
+                          ? `${manuallyLocation.substring(0, 75)}...`
+                          : manuallyLocation}
                       </Text>
                     </>
                   ) : (
                     <>
                       <Text style={styles.headerText_1}>
-                        {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                        {currentLocation.length > 75
+                          ? `${currentLocation.substring(0, 75)}...`
+                          : currentLocation}
                       </Text>
                     </>
                   )}
                 </View>
               </View>
-              <Text style={{ fontSize: 15, fontWeight: 600, lineHeight: 14.4, color: "#1C1B1F" }}>When should the professional arrive?</Text>
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  lineHeight: 14.4,
+                  color: '#1C1B1F',
+                }}>
+                When should the professional arrive?
+              </Text>
               {/* <Text style={{ fontSize: 10, lineHeight: 15, fontWeight: 400, color: "#A09CAB" }}>Your service will take approx. 40 Mins</Text> */}
-              <View style={{ marginVertical: 10, }}>
-                <Text style={{ fontSize: 14, fontWeight: 500, lineHeight: 15, color: '#000000' }}>Choose Date & Time</Text>
+              <View style={{marginVertical: 10}}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 500,
+                    lineHeight: 15,
+                    color: '#000000',
+                  }}>
+                  Choose Date & Time
+                </Text>
                 {renderWeekInRows(daysAndDates).map((row, rowIndex) => (
                   <View key={rowIndex} style={styles.row}>
                     {row.map((date, index) => (
@@ -477,50 +512,69 @@ const SummaryScreen = ({ route }) => {
                         key={index}
                         style={[
                           styles.dayCard,
-                          selectedDate === date && styles.selectedDateButton // Change background color if selected
+                          selectedDate === date && styles.selectedDateButton, // Change background color if selected
                         ]}
-                        onPress={() => handleDateSelect(date)}
-                      >
-                        <Text style={[styles.dateText, selectedDate === date && styles.selectedDateButton]}>{date}</Text>
+                        onPress={() => handleDateSelect(date)}>
+                        <Text
+                          style={[
+                            styles.dateText,
+                            selectedDate === date && styles.selectedDateButton,
+                          ]}>
+                          {date}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 ))}
-
               </View>
-              <View style={styles.modalHeader}>
-                <Image source={require('../../Icons/debit.png')} />
-                <View style={{ justifyContent: 'center', marginHorizontal: 4, }}>
-                  <Text style={styles.modalHeaderTitle}>Online payment only for selected date</Text>
-                </View>
-              </View>
-              {renderTimesInRows(times).map((row, rowIndex) => (
-                <View key={rowIndex} style={styles.row}>
-                  {row.map((current, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.timeCard,
-                        selectedCurrent === current && styles.selectedDateButton // Change background color if selected
-                      ]}
-                      onPress={() => handleTimeSelect(current)}
-                    >
-                      <Text style={[styles.time_text, selectedCurrent === current && styles.selectedDateButton]}>{current}</Text>
-                    </TouchableOpacity>
+              {
+                (selectedDate && timeSlots) &&
+                <View>
+                  <View style={styles.modalHeader}>
+                    <Image source={require('../../Icons/debit.png')} />
+                    <View style={{justifyContent: 'center', marginHorizontal: 4}}>
+                      <Text style={styles.modalHeaderTitle}>
+                        Online payment only for selected date
+                      </Text>
+                    </View>
+                  </View>
+                  {renderTimesInRows(timeSlots).map((row, rowIndex) => (
+                    <View key={rowIndex} style={styles.row}>
+                      {row.map((current, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.timeCard,
+                            selectedTimeSlot === current &&
+                              styles.selectedDateButton, // Change background color if selected
+                          ]}
+                          onPress={() => handleTimeSelect(current)}>
+                          <Text
+                            style={[
+                              styles.time_text,
+                              selectedTimeSlot === current &&
+                                styles.selectedDateButton,
+                            ]}>
+                            {current}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   ))}
                 </View>
-              ))}
-              <TouchableOpacity style={styles.buttonBottomModal} onPress={() => deviceCondition(item.deviceId)}>
+              }
+              <TouchableOpacity
+                style={styles.buttonBottomModal}
+                onPress={() => deviceCondition(item.deviceId)}>
                 <Text style={styles.buttonText}>Proceed to checkout </Text>
               </TouchableOpacity>
             </View>
           </View>
         </Modal>
         {/* ================= Add Service Modal End========= */}
-
       </View>
-    )
-  }
+    );
+  };
 
   return (
     <View style={styles.mainView}>
@@ -536,33 +590,42 @@ const SummaryScreen = ({ route }) => {
         <FlatList
           data={data}
           renderItem={summaryData}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={item => item.id.toString()}
         />
       </ScrollView>
       <View style={styles.bottomView}>
         <View style={styles.topHeader2}>
           <View style={styles.headerLeft}>
-            <View style={{ justifyContent: 'center' }}>  <Image source={require('../../Icons/locationIcon.png')} style={{width: 13, height: 13}}/></View>
-            <View style={{ justifyContent: 'center' }}>
+            <View style={{justifyContent: 'center'}}>
+              {' '}
+              <Image
+                source={require('../../Icons/locationIcon.png')}
+                style={{width: 13, height: 13}}
+              />
+            </View>
+            <View style={{justifyContent: 'center'}}>
               <Text style={styles.headerText_1}>
                 {manuallyAddress == 'true' ? (
                   <>
                     <Text style={styles.headerText_1}>
-                    {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 75)}...` : manuallyLocation}
+                      {manuallyLocation.length > 75
+                        ? `${manuallyLocation.substring(0, 75)}...`
+                        : manuallyLocation}
                     </Text>
                   </>
                 ) : (
                   <>
                     <Text style={styles.headerText_1}>
-                      {currentLocation.length > 75 ? `${currentLocation.substring(0, 75)}...` : currentLocation}
+                      {currentLocation.length > 75
+                        ? `${currentLocation.substring(0, 75)}...`
+                        : currentLocation}
                     </Text>
                   </>
                 )}
                 {/* {flat_no} */}
               </Text>
             </View>
-            <View style={{ justifyContent: 'center' }}>
-            </View>
+            <View style={{justifyContent: 'center'}}></View>
           </View>
           {/* <View style={styles.headerRight}>
             <TouchableOpacity
@@ -573,14 +636,20 @@ const SummaryScreen = ({ route }) => {
 
           </View> */}
         </View>
-        {isVisible ? <TouchableOpacity style={styles.buttonBottom} onPress={async () => await paymentBtn()}>
-          <Text style={styles.buttonText}>Proceed to pay </Text>
-        </TouchableOpacity> :
-          <TouchableOpacity style={styles.buttonBottom} onPress={() => selectSlot()}>
+        {(selectedDate && selectedTimeSlot) ? (
+          <TouchableOpacity
+            style={styles.buttonBottom}
+            onPress={async () => await paymentBtn()}>
+            <Text style={styles.buttonText}>Proceed to pay </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.buttonBottom}
+            onPress={() => selectSlot()}>
             <Text style={styles.buttonText}>Select slot</Text>
-          </TouchableOpacity>}
+          </TouchableOpacity>
+        )}
       </View>
-
     </View>
   );
 };
@@ -636,7 +705,7 @@ const styles = StyleSheet.create({
   text_4: {
     fontSize: 16,
     fontWeight: 700,
-    textAlign: 'right',
+    // textAlign: 'right',
     color: '#000000',
   },
   text_2: {
@@ -836,7 +905,7 @@ const styles = StyleSheet.create({
   topHeader2: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical:10,
+    marginVertical: 10,
   },
 
   headerLeft: {
@@ -898,7 +967,7 @@ const styles = StyleSheet.create({
   },
   centeredViewModal: {
     flex: 1,
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     width: '100%',
   },
@@ -908,7 +977,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FB923C',
   },
   addressView: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderBottomWidth: 0.5,
     paddingBottom: 5,
     marginBottom: 10,
@@ -925,14 +994,14 @@ const styles = StyleSheet.create({
   },
 
   buttonBottomModal: {
-    width: "100%",
+    width: '100%',
     height: 54,
     borderWidth: 1,
     borderColor: '#FB923C',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 14,
-    position: "absolute",
+    position: 'absolute',
     marginHorizontal: 16,
     bottom: 20,
   },
@@ -972,7 +1041,7 @@ const styles = StyleSheet.create({
   },
   centeredViewCoupans: {
     flex: 1,
-    width: "100%",
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
@@ -1006,7 +1075,7 @@ const styles = StyleSheet.create({
   coupanCard: {
     width: 'auto',
     height: 120,
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 10,
     padding: 15,
     borderRadius: 5,
@@ -1034,7 +1103,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F3F3',
     borderRadius: 4,
     marginVertical: 4,
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   modalHeaderTitle: {
     fontSize: 12,
@@ -1052,14 +1121,14 @@ const styles = StyleSheet.create({
     borderColor: '#A09CAB',
     marginHorizontal: 2,
     marginVertical: 4,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   time_text: {
     fontSize: 10,
     fontWeight: 400,
     color: '#000000',
     lineHeight: 12,
-    textAlign: "center",
+    textAlign: 'center',
   },
   rowContainer: {
     flexDirection: 'column',
@@ -1067,11 +1136,15 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
 
   dateText: {
-    fontSize: 10, fontWeight: 500, lineHeight: 12, textAlign: "center", color: '#000',
+    fontSize: 10,
+    fontWeight: 500,
+    lineHeight: 12,
+    textAlign: 'center',
+    color: '#000',
   },
 
   selectedDateButton: {
@@ -1079,7 +1152,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     borderColor: '#FB923C', // Background color when selected
   },
-
 
   section_5: {
     width: '100%',
@@ -1096,5 +1168,3 @@ const styles = StyleSheet.create({
     color: '#1C1B1F',
   },
 });
-
-
