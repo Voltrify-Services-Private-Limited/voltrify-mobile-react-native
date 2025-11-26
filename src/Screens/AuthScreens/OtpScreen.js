@@ -283,11 +283,11 @@ const styles = StyleSheet.create({
   second_view: {
     width: '100%',
     height: 418,
-    position: 'absolute',
-    bottom: 0,
-    borderTopRightRadius: 30,
-    borderTopLeftRadius: 30,
+    // position: 'absolute',
+    // bottom: 0,
+    borderRadius: 30,
     backgroundColor: '#ffffff',
+    marginTop: 'auto', 
   },
   text_3: {
     fontSize: 24,

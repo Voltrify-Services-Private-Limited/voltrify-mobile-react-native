@@ -10,24 +10,32 @@ import {
   Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { showToast } from '../../Component/Toast';
 import { useNavigation } from '@react-navigation/native';
-import IndianFlag from '../../SvgImage/IndianFlag';
+import IndianFlag from '../../assets/SvgImage/IndianFlag';
 import Loader from '../../Component/Loader';
+
 const LoginScreenMobile = ({route}) => {
   const navigation = useNavigation();
-  const [warning, setWarning] = useState(false);
+  const [warning, setWarning] = useState({
+    show: false,
+    message: '',
+  });
   const [loading, setLoading] = useState(false);
 
   const [phone_number, setPhoneNumber] = useState();
-
+  const isValidPhoneNumber = (number) => {
+    return /^[6-9]\d{9}$/.test(number);
+  };
   const numberData = async () => {
     await AsyncStorage.setItem('phone_number', phone_number);
-    console.log(phone_number);
   };
 
   const UserLoginApi = async () => {
     try {
+      if (!isValidPhoneNumber(phone_number)) {        
+        setWarning({show: true, message: 'Please enter a valid phone number.'});
+        return 400;
+      }
       setLoading(true);
       console.log('enter UserLoginApi', phone_number);
   
@@ -45,41 +53,41 @@ const LoginScreenMobile = ({route}) => {
       console.log('response', response);
   
       if (response.statusCode === 404) {
-        setWarning(true);
-        return false;
+        setWarning({show: true, message: "Account not found. Please do registration."});
+        return 404;
       }
       console.log('login data', response);
-      return true;
+      return 200;
     } catch (error) {
       console.log("Error:", error);
-      return false;  // Return false to indicate failure
+      return 400;  // Return false to indicate failure
     } finally {
       setLoading(false);  // Always stop loading
     }
   };
 
   const loginData = async () => {
-    await _numberLogin();
     numberData();
+    await _numberLogin();
   };
 
   const _numberLogin = async () => {
     if (phone_number == '') {
-      showToast({text: 'Please enter your Phone Number.', navBar: false});
+      setWarning({show: true, message: "Please enter your Phone Number."});
     } else if (phone_number.length < 10) {
-      showToast({
-        text: 'Correct Your Phone Number.',
-        navBar: false,
-      });
+      setWarning({show: true, message: "Please enter 10 digit Phone Number."});
     } else {
       const LoginResponse = await UserLoginApi();
-      if (LoginResponse){
+      if (LoginResponse == 200){
         navigation.navigate('OtpScreen', {phoneNumber: phone_number});
+      }
+      else if (LoginResponse == 404) {
+        navigation.navigate('RegisterScreen', {phoneNumber: phone_number});
       }
     }
   };
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView 
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       style={styles.main_view}>
@@ -108,7 +116,7 @@ const LoginScreenMobile = ({route}) => {
         </View>
         <Text style={styles.text_3}>Login Mobile Number.</Text>
         <Text style={styles.text_4}>Enter your Mobile Number to Login</Text>
-        {warning ? <Text style={styles.text_warning}>Account not found. Please do registration.</Text> : null}
+        {warning.show ? <Text style={styles.text_warning}>{warning.message}</Text> : null}
         <View style={styles.input_box}>
           <IndianFlag width={24} height={24} />
           
@@ -166,6 +174,7 @@ const styles = StyleSheet.create({
   main_view: {
     flex: 1,
     backgroundColor: '#FB923C',
+    
   },
   text_1: {
     fontSize: 18,
@@ -185,12 +194,10 @@ const styles = StyleSheet.create({
   second_view: {
     width: '100%',
     height: 400,
-    position: 'absolute',
-    bottom: 0,
     alignItems: 'center',
-    borderTopRightRadius: 30,
-    borderTopLeftRadius: 30,
+    borderRadius: 30,
     backgroundColor: '#ffffff',
+    marginTop: 'auto',     // <--- instead of absolute bottom
   },
   text_3: {
     fontSize: 24,

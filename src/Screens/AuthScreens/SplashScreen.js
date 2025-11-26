@@ -11,7 +11,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import TextLogo_1 from '../../SvgImage/TextLogo_1';
+import TextLogo_1 from '../../assets/SvgImage/TextLogo_1';
 
 
 // dimension

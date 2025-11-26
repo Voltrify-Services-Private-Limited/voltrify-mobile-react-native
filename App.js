@@ -3,11 +3,12 @@ import {NavigationContainer} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AuthContext} from './src/Component/AuthContext';
 
-
 import SplashScreen from './src/Screens/AuthScreens/SplashScreen';
 import Authroute from './src/Routes/AuthRoute';
 import Mainroute from './src/Routes/MainRoute';
-import { LogBox } from 'react-native';
+import {LogBox} from 'react-native';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import { StatusBar } from 'react-native';
 
 const App = () => {
   LogBox.ignoreLogs(['Warning: ...']);
@@ -78,17 +79,26 @@ const App = () => {
     }, 2000);
   }, []);
   return (
-    <AuthContext.Provider value={authContext}>
-      <NavigationContainer>
-        {authState.isLoading ? (
-          <SplashScreen />
-        ) : authState.userToken == null ? (
-          <Authroute />
-        ) : (
-          <Mainroute />
-        )}
-      </NavigationContainer>
-    </AuthContext.Provider>
+    <SafeAreaProvider>
+      <StatusBar
+        barStyle="dark-content"      // Black icons
+        backgroundColor="transparent" // Let SafeArea handle background
+        translucent={true}
+      />
+      <SafeAreaView style={{flex: 1}}>
+        <AuthContext.Provider value={authContext}>
+          <NavigationContainer>
+            {authState.isLoading ? (
+              <SplashScreen />
+            ) : authState.userToken == null ? (
+              <Authroute />
+            ) : (
+              <Mainroute />
+            )}
+          </NavigationContainer>
+        </AuthContext.Provider>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

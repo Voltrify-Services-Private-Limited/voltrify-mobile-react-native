@@ -2,7 +2,11 @@ import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Image, View} from 'react-native';
 
-
+import UserIcon from "../Icons/nav/user.js";
+import HomeIcon from "../Icons/nav/home.js";
+import SupportIcon from "../Icons/nav/support.js";
+import CartIcon from "../Icons/nav/cart.js";
+import ServiceIcon from "../Icons/nav/service.js";
 
 import DashboardScreen from '../Screens/MainScreens/DashboardScreen';
 import ServiceScreen from '../Screens/MainScreens/ServiceScreen';
@@ -32,10 +36,10 @@ const BottomTab = (props) => {
         component={DashboardScreen}
         options={{
           tabBarIcon: ({focused}) => {
-            const icon = focused
-              ? require('../Icons/home.png')
-              : require('../Icons/home3.png');
-            return <Image source={icon} />;
+            const color = focused
+              ? "#FB923C"
+              : "#A09CAB";
+            return <HomeIcon color={color} />;
           },
           tabBarIconStyle: {
             marginTop: 8,
@@ -53,10 +57,10 @@ const BottomTab = (props) => {
         component={ServiceScreen}
         options={{
           tabBarIcon: ({focused}) => {
-            const icon = focused
-              ? require('../Icons/serviceActive.png')
-              : require('../Icons/service.png');
-            return <Image source={icon} />;
+            const color = focused
+              ? "#FB923C"
+              : "#A09CAB";
+            return <ServiceIcon color={color} />;
           },
           tabBarIconStyle: {
             marginTop: 8,
@@ -74,10 +78,10 @@ const BottomTab = (props) => {
         component={OrderScreen}
         options={{
           tabBarIcon: ({focused}) => {
-            const icon = focused
-              ? require('../Icons/orderActive.png')
-              : require('../Icons/oders.png');
-            return <Image source={icon} />;
+            const color = focused
+              ? "#FB923C"
+              : "#A09CAB";
+            return <CartIcon color={color} />;
           },
           tabBarIconStyle: {
             marginTop: 8,
@@ -95,10 +99,10 @@ const BottomTab = (props) => {
         component={SupportScreen}
         options={{
           tabBarIcon: ({focused}) => {
-            const icon = focused
-              ? require('../Icons/supportActive.png')
-              : require('../Icons/support2.png');
-            return <Image source={icon} />;
+            const color = focused
+              ? "#FB923C"
+              : "#A09CAB";
+            return <SupportIcon color={color} />;
           },
           tabBarIconStyle: {
             marginTop: 8,
@@ -116,10 +120,10 @@ const BottomTab = (props) => {
         component={AccountScreen}
         options={{
           tabBarIcon: ({focused}) => {
-            const icon = focused
-              ? require('../Icons/accountActive.png')
-              : require('../Icons/account.png');
-            return <Image source={icon} />;
+            const color = focused
+              ? "#FB923C"
+              : "#A09CAB";
+            return <UserIcon color={color} />;
           },
           tabBarIconStyle: {
             marginTop: 8,

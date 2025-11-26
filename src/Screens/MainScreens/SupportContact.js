@@ -20,7 +20,7 @@ const SupportContact = ({route}) => {
             <Text style={styles.lable}>Contact No. : </Text>
           </View>
           <View style={{justifyContent: 'center'}}>
-            <Text style={styles.value}>07514508462 (09:00 AM - 06:00 PM)</Text>
+            <Text style={styles.value}>7999676443 (06:00 AM - 09:00 PM)</Text>
           </View>
         </View>
         <View style={styles.card}>

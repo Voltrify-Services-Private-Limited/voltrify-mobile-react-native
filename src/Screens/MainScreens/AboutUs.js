@@ -5,7 +5,7 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  Button,
+  ScrollView,
 } from 'react-native';
 import React, { useState } from 'react';
 import Geolocation from '@react-native-community/geolocation';
@@ -38,7 +38,7 @@ const AboutUs = props => {
   // };
   
   return (
-    <View style={styles.mainView}>
+    <ScrollView style={styles.mainView}>
       <View style={styles.topHeader}>
         <TouchableOpacity
           style={styles.backButton}
@@ -85,16 +85,20 @@ const AboutUs = props => {
             doorstep.
           </Text>
         </View>
-        <View style={{marginVertical: 10}}>
+        {/* <View style={{marginVertical: 10}}>
           <Text style={styles.text_3}>Wide Network</Text>
           <Text style={styles.text_4}>
             We're partnering with local repair shops to provide comprehensive
             service coverage.
           </Text>
-        </View>
+        </View> */}
         <View style={{marginVertical: 10}}>
           <Text style={styles.text_5}>Contact Us</Text>
-          <Text style={styles.text_6}>info@voltrifyservices.com</Text>
+          <Text style={styles.text_6}>info@voltrify.in</Text>
+        </View>
+        <View style={{marginVertical: 10}}>
+          <Text style={styles.text_5}>Phone</Text>
+          <Text style={styles.text_6}>+917999676443</Text>
         </View>
         <View style={{marginVertical: 10}}>
           <Text style={styles.text_5}>Coverage</Text>
@@ -115,7 +119,7 @@ const AboutUs = props => {
         </View>
    
       </View>
-    </View>
+    </ScrollView>
   );
 };
 export default AboutUs;

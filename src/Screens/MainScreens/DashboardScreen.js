@@ -4,6 +4,9 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Geocoding from 'react-native-geocoding';
 import ModalComponent from '../../Component/AddressModal';
+// Import the new Carousel Component
+import BannerCarousel from '../../Component/BannerCarousel'; 
+
 const DashboardScreen = ({ route }) => {
   const [serviceData, setServiceData] = useState([]);
   const [categoriesData, setCategorise] = useState([]);
@@ -22,6 +25,17 @@ const DashboardScreen = ({ route }) => {
 
 
   const navigation = useNavigation();
+
+  // --- Dummy Data for the Banner Carousel ---
+  // Replace these with your actual banner images or API data
+  const bannerImages = [
+    { id: 1, image: require('../../assets/Banners/banner1.png') },
+    { id: 2, image: require('../../assets/Banners/banner2.png') },
+    { id: 3, image: require('../../assets/Banners/banner3.png') },
+    { id: 4, image: require('../../assets/Banners/banner4.png') },
+    { id: 5, image: require('../../assets/Banners/banner5.png') },
+    // { id: 6, image: require('../../Icons/banner.png') },
+  ];
 
   useEffect(() => {
     getAllCategorise();
@@ -346,13 +360,13 @@ const DashboardScreen = ({ route }) => {
             {manuallyAddress == 'true' ? (
               <>
                 <Text style={styles.headerText_1}>
-                {manuallyLocation.length > 75 ? `${manuallyLocation.substring(0, 50)}...` : manuallyLocation}
+                {manuallyLocation?.length > 75 ? `${manuallyLocation.substring(0, 50)}...` : manuallyLocation}
                 </Text>
               </>
             ) : (
               <>
                 <Text style={styles.headerText_1}>
-                  {currentLocation.length > 75 ? `${currentLocation.substring(0, 50)}...` : currentLocation}
+                  {currentLocation?.length > 75 ? `${currentLocation.substring(0, 50)}...` : currentLocation}
                 </Text>
               </>
             )}
@@ -392,12 +406,8 @@ const DashboardScreen = ({ route }) => {
       <ScrollView showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefersh} onRefresh={handleRefersh} />}
       >
-        <View style={styles.banner}>
-          <Image
-            source={require('../../Icons/banner.png')}
-            style={{ width: '100%', borderRadius: 10 }}
-          />
-        </View>
+        {/* REPLACED STATIC BANNER WITH CAROUSEL */}
+        <BannerCarousel data={bannerImages} />
 
         {/* Filtered Categories */}
         <View style={{ marginVertical: 5, }}>
@@ -518,10 +528,10 @@ const styles = StyleSheet.create({
     width: '90%',
     lineHeight: 14.4,
   },
-  banner: {
-    marginVertical: 10,
-    height: 160,
-  },
+  // banner: {
+  //   marginVertical: 10,
+  //   height: 160,
+  // },
   heading1: {
     fontSize: 20,
     fontWeight: 600,
@@ -596,5 +606,3 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
-
-

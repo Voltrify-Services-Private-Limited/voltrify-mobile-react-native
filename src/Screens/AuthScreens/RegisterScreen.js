@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,37 +15,62 @@ import {AuthContext} from '../../Component/AuthContext';
 import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
 
+const isValidPhoneNumber = (number) => {
+  return /^[6-9]\d{9}$/.test(number);
+};
+const isValidEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
 const RegisterScreen = props => {
+  
   const {login} = React.useContext(AuthContext);
   const navigation = useNavigation();
   // State hooks to store input values
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
-  // Handle form submission
+  useEffect(() => {
+    const fetchPhoneNumber = async () => {
+      const storedPhoneNumber = await AsyncStorage.getItem('phone_number');
+      if (storedPhoneNumber) {
+        setPhoneNumber(storedPhoneNumber);
+      }
+    };
+    fetchPhoneNumber();
+  }, []);
 
   const handleRegister = async () => {
     try {
-      if (
-        firstName == '' ||
-        email == '' ||
-        lastName == '' ||
-        phoneNumber == ''
-      ) {
-        ToastAndroid.show('Some fields are empty!', ToastAndroid.BOTTOM);
+      if (firstName === '') {
+        ToastAndroid.show('First Name is required', ToastAndroid.BOTTOM);
+      } else if (lastName === '') {
+        ToastAndroid.show('Last Name is required', ToastAndroid.BOTTOM);
+      } else if (email === '') {
+        ToastAndroid.show('Email is required', ToastAndroid.BOTTOM);
+      } else if (phoneNumber === '') {
+        ToastAndroid.show('Phone Number is required', ToastAndroid.BOTTOM);
       } else {
         if (phoneNumber.length < 10) {
-          ToastAndroid.show('Please enter a valid phone number!', ToastAndroid.BOTTOM);
+          ToastAndroid.show('Please enter 10 digit phone number', ToastAndroid.BOTTOM);
+          return;
+        }
+        if (!isValidPhoneNumber(phoneNumber)) {
+          ToastAndroid.show('Please enter a valid phone number', ToastAndroid.BOTTOM);
           return;
         }
         if (firstName.length < 3) {
-          ToastAndroid.show('Please enter a valid first name!', ToastAndroid.BOTTOM);
+          ToastAndroid.show('Please enter a valid first name', ToastAndroid.BOTTOM);
           return;
         }
         if (lastName.length < 3) {
-          ToastAndroid.show('Please enter a valid last name!', ToastAndroid.BOTTOM);
+          ToastAndroid.show('Please enter a valid last name', ToastAndroid.BOTTOM);
+          return;
+        }
+        if (!isValidEmail(email)) {
+          ToastAndroid.show('Please enter a valid email address', ToastAndroid.BOTTOM);
           return;
         }
         let data = {
@@ -56,7 +81,7 @@ const RegisterScreen = props => {
         };
 
         // Prepare the body of the request
-        const body = new URLSearchParams(data).toString();
+        const body = JSON.stringify(data);
 
         // Perform the fetch request
         const res = await fetch('http://api.voltrify.in/auth/user/register', {
@@ -76,12 +101,12 @@ const RegisterScreen = props => {
         if (result.statusCode === 201) {
           generateOtp();
         } else {
-          ToastAndroid.show('Phone number is already registered!', ToastAndroid.BOTTOM);
+          ToastAndroid.show('Phone number is already registered', ToastAndroid.BOTTOM);
         }
       }
     } catch (err) {
       ToastAndroid.show(
-        'Please check the credentials or try again later!',
+        'Please check the credentials or try again later',
         ToastAndroid.BOTTOM,
       );
       console.log('Get OTP error ---- ', err);
@@ -95,7 +120,7 @@ const RegisterScreen = props => {
       };
 
       // Prepare the body of the request
-      const body = new URLSearchParams(data).toString();
+      const body = JSON.stringify(data);
 
       // Perform the fetch request
       const res = await fetch('http://api.voltrify.in/otp/generate-otp', {
@@ -132,24 +157,6 @@ const RegisterScreen = props => {
       console.log('Get OTP error ---- ', err);
     }
   };
-
-  // const generateOtp = async () => {
-  //   await fetch('http://api.voltrify.in/otp/generate-otp', {
-  //     method: 'POST',
-  //     headers: {
-  //       Accept: 'application/json',
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({
-  //       phone_number: phoneNumber,
-  //     }),
-  //   })
-  //     .then(response => response.json())
-  //     .then(responseData => {
-  //       navigation.navigate('OtpScreen');
-  //     })
-  //     .done();
-  // };
 
   return (
     <KeyboardAvoidingView
