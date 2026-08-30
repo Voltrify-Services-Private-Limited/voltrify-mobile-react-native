@@ -53,7 +53,7 @@ const DeviceCondition = ({ route }) => {
             
             // Check if data exists before accessing index
             if (resData.data && resData.data.length > 0) {
-                await AsyncStorage.setItem('cartId', JSON.stringify(resData.data[0].id));
+                await AsyncStorage.setItem('cartId', resData.data[0].id);
                 console.log("cart get all api pick one: ", resData.data[0].id);
             }
         } catch (err) {
@@ -290,7 +290,6 @@ const styles = StyleSheet.create({
     dropdownContainer: {
         elevation: 5,
         marginTop: 5,
-        height: 'auto',
         alignSelf: 'center',
         width: '100%',
         backgroundColor: '#fff',

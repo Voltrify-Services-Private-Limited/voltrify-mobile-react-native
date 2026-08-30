@@ -345,6 +345,8 @@ const SelectAddress = ({ route }) => {
       const timeSlot = await AsyncStorage.getItem('time_slot');
       const dateSlot = await AsyncStorage.getItem('slot_no_day');
       const cart_id = await AsyncStorage.getItem('cartId');
+      console.log("cart_id", cart_id);
+      
       const itemCount = await AsyncStorage.getItem('itemCount');
       
       const token = JSON.parse(userData);
@@ -373,6 +375,17 @@ const SelectAddress = ({ route }) => {
 
       const response = await result.json();
       console.log('order data========', response);
+      console.log('body========', {
+          cart_id: cart_id,
+          address_id: addresId,
+          condition_id: condition_Id,
+          time_slot: time,
+          coupons_code: coupons_code,
+          payment_mode: 'online',
+          service_description: service_description,
+          date: date,
+          deviceCount: itemCount ? parseInt(itemCount) : 1
+        });
       if(response?.data?.payment_order_id){
           navigation.navigate('PaymentScreen', {
             order_id: response.data.payment_order_id,
@@ -412,11 +425,11 @@ const SelectAddress = ({ route }) => {
     const borderColor = index === selectedIndex ? '#1fc435' : '#FB923C';
     return (
       <View style={[styles.box2, { borderColor: borderColor }]}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={styles.boxText3}>{`${item.firstName} ${item.lastName}`}</Text>
-          <TouchableOpacity onPress={() => setPopModal(true)}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={[styles.boxText3, { flex: 1, flexShrink: 1 }]} numberOfLines={1} ellipsizeMode="tail">{`${item.firstName} ${item.lastName}`}</Text>
+          <TouchableOpacity onPress={() => setPopModal(true)} style={{ flexShrink: 0 }}>
              {/* Text placeholder for image asset */}
-             <Text style={{fontSize: 20, color: '#FB923C', paddingHorizontal: 5}}>•••</Text>
+             {/* <Text style={{fontSize: 20, color: '#FB923C', paddingHorizontal: 5}}>•••</Text> */}
           </TouchableOpacity>
         </View>
         <TouchableOpacity
@@ -424,7 +437,7 @@ const SelectAddress = ({ route }) => {
             seletAddressId(item.id);
             handleSelectItem(index);
           }}>
-          <Text style={styles.boxText4}>
+          <Text style={styles.boxText4} numberOfLines={3} ellipsizeMode="tail">
             {item.addressLine1} {item.addressLine2} {item.landmark} {item.city}{' '}
             {item.state} {item.pincode} {'\n'}
             Ph: +91 {item.phoneNumber}
@@ -548,7 +561,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   box1: {
-    width: 'auto',
     height: 54,
     borderWidth: 1,
     borderRadius: 14,
@@ -564,7 +576,6 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   box2: {
-    width: 'auto',
     minHeight: 125,
     borderWidth: 1,
     borderRadius: 14,

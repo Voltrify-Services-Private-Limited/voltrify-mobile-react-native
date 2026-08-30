@@ -127,7 +127,7 @@ const AddressModal = ({ visible, onClose }) => {
                     value={query}
                     placeholderTextColor={'#000'}
                     onChangeText={searchLocation}
-                    style={{ height: 40, width: 'auto' }}
+                    style={{ height: 40 }}
                   />
                 </View>
               </View>

@@ -146,7 +146,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   searchBar: {
-    width: 'auto',
     height: 40,
     borderWidth: 1,
     borderRadius: 14,

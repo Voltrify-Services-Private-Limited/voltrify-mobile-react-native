@@ -82,7 +82,6 @@ const styles = StyleSheet.create({
     },
     detailBox: {
         width: '100%',
-        height: 'auto',
         backgroundColor: '#fff',
         elevation: 10,
         paddingHorizontal: 16,

@@ -13,7 +13,6 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DeviceType } from '../../Component/utils';
 
 
 const dataService = [
@@ -25,16 +24,9 @@ const dataService = [
 
 const ServiceDetails = ({ route }) => {
   const navigation = useNavigation();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
   const [data, setData] = useState([]);
-  const [serviceType, setServiceType] = useState([]);
-  const { service_id } = route.params;
-  const { service_description } = route.params;
-  const { deviceId } = route.params;
-  // const [typeList, setTypeList] = useState(ServiceType);
+  const { deviceId, imageUri } = route.params;
   const [type, setType] = useState("");
-  const [city, setCity] = useState("");
 
   // Function to handle text press
   const handlePressDay = async (typeService) => {
@@ -42,12 +34,6 @@ const ServiceDetails = ({ route }) => {
     getAllService(typeService);
     console.log(typeService);
   };
-
-
-  const addCartBtn = () => {
-    setModalVisible(!modalVisible);
-    navigation.navigate('ServiceViewCart');
-  }
 
   useEffect(() => {
     getAllService('');
@@ -101,30 +87,6 @@ const ServiceDetails = ({ route }) => {
     navigation.navigate("SummaryScreen");
   }
 
-  const serviceAddBtn = async (id) => {
-    const userData = await AsyncStorage.getItem('access_token');
-    const token = JSON.parse(userData); // Assuming userData is a JSON string containing the token
-    const user_id = await AsyncStorage.getItem('userId');
-    const url = 'http://api.voltrify.in/user/cart';
-    console.log("adsssdd", id);
-    result = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json', // Optional, depending on your API requirements
-      },
-      body: JSON.stringify({
-        service_id: id,
-        user_id: user_id,
-      }),
-
-    });
-    setData(data.filter(item => item.id !== id));
-    response = await result.json();
-    console.log('login data', response);
-    navigation.navigate("SummaryScreen");
-  }
-
   const navigateOther = async (id) => {
     navigation.navigate('SummaryScreen');
     await AsyncStorage.setItem('serviceId', id);
@@ -135,21 +97,21 @@ const ServiceDetails = ({ route }) => {
       <View
         style={{
           flexDirection: 'row',
-          borderBottomWidth: 0.2,
-          borderStyle: 'dashed',
+          // borderBottomWidth: 0.2,
+          // borderStyle: 'dashed',
           marginHorizontal: 1,
           justifyContent: 'space-between',
-          width: 'auto',
           paddingBottom: 5,
-          alignItems: 'center',
+          alignItems: 'flex-start',
+          flex: 1,
         }}>
-        <View>
-          <Text style={styles.contentText4}>{item.name}</Text>
-          <Text style={styles.contentText6} >{item.description.length > 15 ? `${item.description.substring(0, 50)}...` : item.description}</Text>
+        <View style={{ flex: 1, marginRight: 8, flexShrink: 1 }}>
+          <Text style={styles.contentText4} numberOfLines={2} ellipsizeMode="tail">{item.name}</Text>
+          <Text style={styles.contentText6} numberOfLines={2} ellipsizeMode="tail">{item.description}</Text>
           <Text style={styles.contentText7}>Visit charge ₹{item.visitingCharge}</Text>
           <Text style={styles.contentText5}>Service charge starts at ₹{item.price}</Text>
         </View>
-        <View style={{ marginHorizontal: 5 }}>
+        <View style={{ marginLeft: 5, flexShrink: 0 }}>
           <Image source={
             item.deviceImage?.length > 0
               ? { uri: item.deviceImage[0] }
@@ -198,7 +160,7 @@ const ServiceDetails = ({ route }) => {
 
       <View style={styles.banner}>
         <Image
-          source={require('../../Icons/serviceBanner.png')}
+          source={{ uri: imageUri}}
           style={{
             width: '100%',
             height: 200,
@@ -305,13 +267,11 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   cardBox: {
-    width: 'auto',
-    height: 'auto',
     backgroundColor: '#F7F7F7',
     paddingVertical: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: 20,
   },
   cardText: {
     fontSize: 8,
@@ -332,15 +292,17 @@ const styles = StyleSheet.create({
     borderBottomColor: '#A09CAB',
   },
   listCard: {
-    height: 94,
+    minHeight: 94,
     marginBottom: 10,
     borderBottomWidth: 0.2,
     borderBottomColor: '#A09CAB',
+    paddingVertical: 5,
   },
   contentText4: {
     fontSize: 17,
     fontWeight: 600,
     color: '#1C1B1F',
+    flexShrink: 1,
   },
   contentText5: {
     fontSize: 11,
@@ -352,6 +314,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 400,
     color: '#000',
+    flexShrink: 1,
+    marginTop: 2,
   },
   contentText7: {
     fontSize: 14,

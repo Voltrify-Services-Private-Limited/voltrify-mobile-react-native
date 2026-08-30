@@ -412,11 +412,11 @@ const ManageAddress = ({ route }) => {
     const borderColor = index === selectedIndex ? '#1fc435' : '#FB923C';
     return (
       <View style={[styles.box2, { borderColor: borderColor }]}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={styles.boxText3}>{`${item.firstName} ${item.lastName}`}</Text>
-          <TouchableOpacity onPress={() => setPopModal(true)}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={[styles.boxText3, { flex: 1, flexShrink: 1 }]} numberOfLines={1} ellipsizeMode="tail">{`${item.firstName} ${item.lastName}`}</Text>
+          <TouchableOpacity onPress={() => setPopModal(true)} style={{ flexShrink: 0 }}>
              {/* Text placeholder for image asset */}
-             <Text style={{fontSize: 20, color: '#FB923C', paddingHorizontal: 5}}>•••</Text>
+             {/* <Text style={{fontSize: 20, color: '#FB923C', paddingHorizontal: 5}}>•••</Text> */}
           </TouchableOpacity>
         </View>
         <TouchableOpacity
@@ -424,7 +424,7 @@ const ManageAddress = ({ route }) => {
             seletAddressId(item.id);
             handleSelectItem(index);
           }}>
-          <Text style={styles.boxText4}>
+          <Text style={styles.boxText4} numberOfLines={3} ellipsizeMode="tail">
             {item.addressLine1} {item.addressLine2} {item.landmark} {item.city}{' '}
             {item.state} {item.pincode} {'\n'}
             Ph: +91 {item.phoneNumber}
@@ -503,13 +503,13 @@ const ManageAddress = ({ route }) => {
           </View>
         </View>
 
-        <View style={styles.bottomContainer}>
+        {/* <View style={styles.bottomContainer}>
           <TouchableOpacity
             style={styles.input_box2}
             onPress={() => createOrder()}>
             <Text style={styles.text_6Modal}>Next</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </SafeAreaView>
     </>
   );
@@ -548,7 +548,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   box1: {
-    width: 'auto',
     height: 54,
     borderWidth: 1,
     borderRadius: 14,
@@ -564,7 +563,6 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   box2: {
-    width: 'auto',
     minHeight: 125,
     borderWidth: 1,
     borderRadius: 14,

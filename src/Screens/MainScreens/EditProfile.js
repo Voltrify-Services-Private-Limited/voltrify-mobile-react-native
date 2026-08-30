@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
   },
 
   buttonBottom: {
-    width: 'auto',
     height: 54,
     borderWidth: 1,
     borderColor: '#FB923C',

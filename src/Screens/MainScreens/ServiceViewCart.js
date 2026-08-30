@@ -98,7 +98,6 @@ const ServiceViewCart = ({ route }) => {
                                 borderStyle: 'dashed',
                                 marginHorizontal: 1,
                                 justifyContent: 'space-between',
-                                width: 'auto',
                                 paddingBottom: 5,
                             }}>
                             <View>
@@ -154,7 +153,6 @@ const ServiceViewCart = ({ route }) => {
                                 borderStyle: 'dashed',
                                 marginHorizontal: 1,
                                 justifyContent: 'space-between',
-                                width: 'auto',
                                 paddingBottom: 5,
                             }}>
                             <View>
@@ -210,7 +208,6 @@ const ServiceViewCart = ({ route }) => {
                                 borderStyle: 'dashed',
                                 marginHorizontal: 1,
                                 justifyContent: 'space-between',
-                                width: 'auto',
                                 paddingBottom: 5,
                             }}>
                             <View>
@@ -332,7 +329,6 @@ const styles = StyleSheet.create({
         marginVertical: 2,
     },
     cardBox: {
-        width: 'auto',
         height: 95,
         backgroundColor: '#F7F7F7',
         paddingVertical: 5,

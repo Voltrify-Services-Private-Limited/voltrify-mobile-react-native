@@ -86,7 +86,6 @@ const styles = StyleSheet.create({
   },
 
   searchBar: {
-    width: 'auto',
     height: 40,
     borderWidth: 1,
     borderRadius: 14,

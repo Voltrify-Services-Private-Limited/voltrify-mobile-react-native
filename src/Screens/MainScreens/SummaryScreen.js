@@ -138,7 +138,7 @@ const SummaryScreen = ({route}) => {
     const backgroundColor = index === selectedIndex ? '#FB923C' : '#d0d0d0';
     const color = index === selectedIndex ? '#000' : '#FB923C';
     return (
-      <View style={{width: 'auto', marginBottom: 20, marginHorizontal: 5}}>
+      <View style={{marginBottom: 20, marginHorizontal: 5}}>
         <TouchableOpacity
           onPress={() => {
             handlePressCode(item.code),
@@ -688,8 +688,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   section_1: {
-    width: 'auto',
-    height: 'fit-content',
     borderLeftWidth: 1,
     borderLeftColor: '#A09CAB',
     paddingHorizontal: 4,
@@ -801,7 +799,6 @@ const styles = StyleSheet.create({
   },
   section_3: {
     width: '100%',
-    height: 'fit-content',
     backgroundColor: '#F7F7F7',
     paddingHorizontal: 20,
     marginVertical: 10,
@@ -820,7 +817,6 @@ const styles = StyleSheet.create({
   },
   section_4: {
     width: '100%',
-    height: 'fit-content',
     backgroundColor: '#F7F7F7',
     paddingHorizontal: 20,
     marginVertical: 10,
@@ -870,7 +866,6 @@ const styles = StyleSheet.create({
   },
 
   buttonBottom: {
-    width: 'auto',
     height: 54,
     borderWidth: 1,
     borderColor: '#FB923C',
@@ -1073,7 +1068,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   coupanCard: {
-    width: 'auto',
     height: 120,
     alignItems: 'center',
     paddingVertical: 10,
@@ -1155,7 +1149,6 @@ const styles = StyleSheet.create({
 
   section_5: {
     width: '100%',
-    height: 'fit-content',
     backgroundColor: '#F7F7F7',
     paddingHorizontal: 20,
     marginVertical: 10,

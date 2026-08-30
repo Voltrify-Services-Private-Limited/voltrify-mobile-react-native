@@ -199,7 +199,6 @@ const styles = StyleSheet.create({
   },
   giftBox: {
     marginHorizontal: 10,
-    width: 'auto',
     height: 130,
     borderRadius: 14,
     marginTop: 26,
@@ -251,7 +250,6 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   logoutBtn: {
-    width: 'auto',
     height: 54,
     marginHorizontal: 16,
     flexDirection: 'row',

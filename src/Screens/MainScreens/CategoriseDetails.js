@@ -110,8 +110,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 10,
-    width: 'auto',
-    height: 'auto',
     backgroundColor: "#fff",
     elevation: 5,
     padding: 10,

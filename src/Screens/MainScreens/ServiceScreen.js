@@ -188,7 +188,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   searchBar: {
-    width: 'auto',
     height: 40,
     borderWidth: 1,
     borderRadius: 14,
@@ -214,7 +213,6 @@ const styles = StyleSheet.create({
   },
   sliderCard: {
     height: 200,
-    width: 'auto',
     marginHorizontal: 5,
     backgroundColor: '#fff',
     elevation: 4,

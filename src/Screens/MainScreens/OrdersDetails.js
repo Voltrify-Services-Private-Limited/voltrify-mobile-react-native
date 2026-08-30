@@ -426,10 +426,8 @@ const styles = StyleSheet.create({
   },
   listItem: {
     borderTopWidth: 0.87,
-    width: 'auto',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    height: 'auto',
     borderTopColor: '#E5E8EB',
   },
   leftSide: {
@@ -507,7 +505,6 @@ const styles = StyleSheet.create({
   },
 
   buttonBottom: {
-    width: 'auto',
     height: 54,
     borderWidth: 1,
     borderColor: '#FB923C',
@@ -657,7 +654,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   coupanCard: {
-    width: 'auto',
     height: 120,
     alignItems: "center",
     paddingVertical: 10,
@@ -738,7 +734,6 @@ const styles = StyleSheet.create({
   },
   modalViewCancle: {
     margin: 20,
-    height: 'auto',
     backgroundColor: 'white',
     borderRadius: 10,
     paddingHorizontal: 35,

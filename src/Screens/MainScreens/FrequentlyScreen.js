@@ -42,8 +42,8 @@ const FrequentlyScreen = props => {
           <TouchableOpacity
             style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             onPress={() => setExpandedIndex(index === expandedIndex ? null : index)}>
-            <Text style={styles.listText}>{item.question}</Text>
-            <Image source={require('../../Icons/rightArrow.png')} />
+            <Text style={[styles.listText, { flex: 1, flexShrink: 1, marginRight: 8 }]} numberOfLines={2} ellipsizeMode="tail">{item.question}</Text>
+            <Image source={require('../../Icons/rightArrow.png')} style={{ flexShrink: 0 }} />
           </TouchableOpacity>
           {expandedIndex === index && (
             <Text style={styles.answerText}>{item.answer}</Text>
@@ -87,7 +87,6 @@ const styles = StyleSheet.create({
     color: '#FB923C',
   },
   searchBar: {
-    width: 'auto',
     height: 40,
     borderWidth: 1,
     borderRadius: 14,

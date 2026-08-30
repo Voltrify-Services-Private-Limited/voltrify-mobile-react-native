@@ -225,6 +225,7 @@ const DashboardScreen = ({ route }) => {
         onPress={() => navigation.navigate('ServiceDetails', {
           deviceId: item.id,
           service_description: item.description,
+          imageUri: item.images[0]
         })}>
         <Image
           source={{ uri: item.images[0] }}
@@ -414,7 +415,7 @@ const DashboardScreen = ({ route }) => {
           <Text style={styles.heading1}>Most Used Categories</Text>
           <Text style={styles.text_1}>Find the right categories for you!</Text>
         </View>
-        <View style={{ height: 'auto', }}>
+        <View>
           <FlatList
             key={'#'}
             data={filteredCategoriesData} // Use filtered categories
@@ -511,7 +512,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   searchBar: {
-    width: 'auto',
     height: 40,
     borderWidth: 1,
     borderRadius: 14,
@@ -567,11 +567,9 @@ const styles = StyleSheet.create({
   },
   sliderList: {
     marginVertical: 5,
-    height: "fit-content",
   },
   servicesSliderList: {
     marginVertical: 5,
-    height: 'fit-content',
   },
   sliderCard: {
     flexDirection: 'row',
@@ -580,7 +578,6 @@ const styles = StyleSheet.create({
   },
   cardBox: {
     width: 120,
-    height: 'auto',
     marginHorizontal: 5,
   },
   cardText2: {

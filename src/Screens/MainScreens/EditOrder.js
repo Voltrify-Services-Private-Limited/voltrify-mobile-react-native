@@ -144,7 +144,6 @@ const EditOrder = ({ route }) => {
                         style={{
                             elevation: 5,
                             marginTop: 100,
-                            height: 'auto',
                             alignSelf: 'center',
                             width: '100%',
                             backgroundColor: '#fff',
@@ -282,7 +281,6 @@ const styles = StyleSheet.create({
     },
 
     buttonBottom: {
-        width: 'auto',
         height: 54,
         borderWidth: 1,
         borderColor: '#FB923C',
