@@ -9,10 +9,19 @@ import Mainroute from './src/Routes/MainRoute';
 import {LogBox} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {GOOGLE_WEB_CLIENT_ID} from './EnvFolder/env';
 
 const App = () => {
   LogBox.ignoreLogs(['Warning: ...']);
   LogBox.ignoreAllLogs();
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: false,
+    });
+  }, []);
   let initialState = {
     isLoading: true,
     userToken: null,

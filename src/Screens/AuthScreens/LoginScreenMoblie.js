@@ -11,6 +11,12 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import IndianFlag from '../../assets/SvgImage/IndianFlag';
 import Loader from '../../Component/Loader';
 
@@ -22,6 +28,10 @@ const LoginScreenMobile = ({route}) => {
   });
   const [loading, setLoading] = useState(false);
 
+  /* ---------------------------------------------------------------------------
+   * Mobile number + OTP login flow (disabled in favour of Google Sign-In).
+   * Kept here (commented) in case we need to re-enable it later.
+   * -------------------------------------------------------------------------
   const [phone_number, setPhoneNumber] = useState();
   const isValidPhoneNumber = (number) => {
     return /^[6-9]\d{9}$/.test(number);
@@ -32,13 +42,13 @@ const LoginScreenMobile = ({route}) => {
 
   const UserLoginApi = async () => {
     try {
-      if (!isValidPhoneNumber(phone_number)) {        
+      if (!isValidPhoneNumber(phone_number)) {
         setWarning({show: true, message: 'Please enter a valid phone number.'});
         return 400;
       }
       setLoading(true);
       console.log('enter UserLoginApi', phone_number);
-  
+
       const url = 'https://api.voltrify.in/otp/generate-otp';
       const result = await fetch(url, {
         method: 'POST',
@@ -47,11 +57,11 @@ const LoginScreenMobile = ({route}) => {
           phone_number: phone_number,
         }),
       });
-  
+
       console.log('before response', result);
       const response = await result.json();
       console.log('response', response);
-  
+
       if (response.statusCode === 404) {
         setWarning({show: true, message: "Account not found. Please do registration."});
         return 404;
@@ -86,6 +96,110 @@ const LoginScreenMobile = ({route}) => {
       }
     }
   };
+  --------------------------------------------------------------------------- */
+
+  // Google Sign-In: get an idToken from Google, send it to the backend,
+  // then reuse the existing token storage + LocationScreen -> login() flow.
+  const googleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+      // Sign out first so the account picker always shows and we get a fresh idToken.
+      await GoogleSignin.signOut();
+      const response = await GoogleSignin.signIn();
+
+      if (!isSuccessResponse(response)) {
+        // User cancelled the picker.
+        return;
+      }
+
+      const idToken = response.data?.idToken;
+      if (!idToken) {
+        setWarning({show: true, message: 'Google sign-in failed. Please try again.'});
+        return;
+      }
+
+      setLoading(true);
+      const res = await fetch('https://api.voltrify.in/auth/user/google', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({idToken}),
+      });
+
+      // Read as text first so a non-JSON (HTML error page) response doesn't crash.
+      const raw = await res.text();
+      console.log('google login status', res.status);
+      console.log('google login raw body', raw);
+
+      let result;
+      try {
+        result = JSON.parse(raw);
+      } catch (parseErr) {
+        setWarning({
+          show: true,
+          message: `Server returned non-JSON (status ${res.status}). Check the Google login endpoint.`,
+        });
+        return;
+      }
+      console.log('google login response', result);
+
+      if (
+        (result.statusCode === 200 || result.statusCode === 201) &&
+        result.data?.accessToken?.token
+      ) {
+        await AsyncStorage.setItem(
+          'access_token',
+          JSON.stringify(result.data.accessToken.token),
+        );
+        if (result.data.refreshToken?.token) {
+          await AsyncStorage.setItem(
+            'refresh_token',
+            JSON.stringify(result.data.refreshToken.token),
+          );
+        }
+        navigation.navigate('LocationScreen', {
+          tokens: result.data.accessToken.token,
+        });
+      } else if (result.statusCode === 404) {
+        setWarning({
+          show: true,
+          message: 'Account not found. Please register first.',
+        });
+      } else {
+        setWarning({
+          show: true,
+          message: result.message || 'Google login failed. Please try again.',
+        });
+      }
+    } catch (error) {
+      if (isErrorWithCode(error)) {
+        switch (error.code) {
+          case statusCodes.SIGN_IN_CANCELLED:
+          case statusCodes.IN_PROGRESS:
+            break;
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            setWarning({
+              show: true,
+              message: 'Google Play Services is not available or outdated.',
+            });
+            break;
+          default:
+            setWarning({
+              show: true,
+              message: 'Google sign-in error. Please try again.',
+            });
+        }
+      } else {
+        setWarning({
+          show: true,
+          message: 'Google sign-in error. Please try again.',
+        });
+      }
+      console.log('google login error ---- ', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView 
       behavior="padding"
@@ -114,12 +228,19 @@ const LoginScreenMobile = ({route}) => {
               alignSelf: 'center',
             }}></View>
         </View>
-        <Text style={styles.text_3}>Login Mobile Number.</Text>
-        <Text style={styles.text_4}>Enter your Mobile Number to Login</Text>
+        <Text style={styles.text_3}>Login / Signup</Text>
+        <Text style={styles.text_4}>
+          Continue with your Google account to get started
+        </Text>
         {warning.show ? <Text style={styles.text_warning}>{warning.message}</Text> : null}
+
+        {/* -----------------------------------------------------------------
+         * Mobile number + OTP login UI (disabled in favour of Google Sign-In).
+         * Kept here (commented) in case we need to re-enable it later.
+         * -----------------------------------------------------------------
         <View style={styles.input_box}>
           <IndianFlag width={24} height={24} />
-          
+
           <TextInput
             placeholder="Enter Your Mobile Number"
             placeholderTextColor="#00000066"
@@ -133,20 +254,24 @@ const LoginScreenMobile = ({route}) => {
         <TouchableOpacity style={[styles.button]} onPress={async () => await loginData()}>
           <Text style={styles.text_5}>Send OTP</Text>
         </TouchableOpacity>
-        {/* <View style={styles.lineBox}>
+        <View style={styles.lineBox}>
           <View style={styles.line}></View>
           <Text style={styles.lineText}>or</Text>
           <View style={styles.line}></View>
         </View>
+        ----------------------------------------------------------------- */}
+
         <TouchableOpacity
           style={styles.input_box2}
-          onPress={() => navigation.navigate('LoginScreenEmail')}>
+          onPress={() => googleLogin()}>
           <Image
             source={require('../../Icons/google.png')}
             style={{marginVertical: 14, marginLeft: 30}}
           />
           <Text style={styles.text_6}>Sign in with Google</Text>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
+
+        {/* Phone-based registration (disabled with the mobile/OTP flow).
         <View
           style={{
             flexDirection: 'row',
@@ -163,6 +288,7 @@ const LoginScreenMobile = ({route}) => {
             </Text>
           </TouchableOpacity>
         </View>
+        */}
       </View>
     </KeyboardAvoidingView>
   );

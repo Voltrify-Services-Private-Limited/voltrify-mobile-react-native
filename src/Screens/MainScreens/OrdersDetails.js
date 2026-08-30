@@ -82,6 +82,7 @@ const OrdersDetails = ({ route }) => {
       });
       const jsonResponse = await response.json();
       console.log('Success', 'Data updated successfully!', jsonResponse);
+      setModalCancle(false);
       navigation.navigate('CancleOrder');
     } catch (error) {
       console.log('Error', error.message, [{ text: 'OK' }]);
@@ -244,25 +245,23 @@ const OrdersDetails = ({ route }) => {
               </View>
             </View>
           </View>
-          {data.status === 'pending' ? (
-            <View>
-
-            </View>
-          ) : (
+          {data.status === 'confirmed' ? (
             <View style={styles.buttonGroup}>
+              {/* Reschedule temporarily disabled - keeping only Cancel order.
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => selectSlotOpen()}>
                 <Text style={styles.buttonText}>Reschedule</Text>
               </TouchableOpacity>
+              */}
               <TouchableOpacity
-                style={[styles.button, { backgroundColor: '#FB923C' }]} onPress={() => setModalCancle(true)}>
+                style={[styles.button, { width: '100%', backgroundColor: '#FB923C' }]} onPress={() => setModalCancle(true)}>
                 <Text style={[styles.buttonText, { color: '#ffffff' }]}>
                   Cancle order
                 </Text>
               </TouchableOpacity>
             </View>
-          )}
+          ) : null}
         </View>
       </ScrollView>
       {/* ================= Add Service Modal Start========= */}
@@ -365,10 +364,10 @@ const OrdersDetails = ({ route }) => {
             <Text style={styles.modalTextCancle}>Please Cancle Your Order!</Text>
             <View style={{ flexDirection: 'row', justifyContent: "space-between", }}>
               <TouchableOpacity style={styles.modalBtn} onPress={() => setModalCancle(false)}>
-                <Text style={styles.modalBtnText}>Cancle</Text>
+                <Text style={styles.modalBtnText}>No</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalBtn} onPress={() => cancleOrder()}  >
-                <Text style={styles.modalBtnText}>Ok</Text>
+                <Text style={styles.modalBtnText}>Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>

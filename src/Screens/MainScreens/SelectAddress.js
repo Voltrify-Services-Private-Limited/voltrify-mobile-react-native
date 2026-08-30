@@ -327,6 +327,13 @@ const SelectAddress = ({ route }) => {
       }
       const resData = await response.json();
       setData(resData.data);
+
+      // Select the first address by default so an address is always chosen.
+      if (resData.data && resData.data.length > 0) {
+        setSelectedIndex(0);
+        setAddressId(resData.data[0].id);
+        await AsyncStorage.setItem('addressId', resData.data[0].id.toString());
+      }
     } catch (err) {
       console.log('get profile err --- ', err);
     }

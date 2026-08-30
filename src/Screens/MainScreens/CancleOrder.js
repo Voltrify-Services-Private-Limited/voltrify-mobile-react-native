@@ -12,15 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 const CancleOrder = ({ route }) => {
      const navigation = useNavigation();
-      useEffect(() => {
-            // Hide splash screen after 2 seconds and navigate to HomeScreen
-            const timer = setTimeout(() => {
-              navigation.navigate('BottomTab'); // Navigate to Home screen
-            }, 2000);
-        
-            return () => clearTimeout(timer);
-          }, []);
-    
+
      return (
         <View style={styles.mainView}>
             <View style={styles.topView}>
@@ -28,6 +20,11 @@ const CancleOrder = ({ route }) => {
                     <Image source={require('../../Icons/failed.png')} style={{ width: 100, height: 100, }} />
                 </View>
                 <Text style={styles.orderText}>Your Order Cancle</Text>
+                <TouchableOpacity
+                    style={styles.doneButton}
+                    onPress={() => navigation.navigate('BottomNavigation', { screen: 'Orders' })}>
+                    <Text style={styles.doneButtonText}>Done</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -79,6 +76,20 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#000',
         marginVertical: 20,
+    },
+    doneButton: {
+        width: 200,
+        height: 50,
+        backgroundColor: '#FB923C',
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    doneButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#fff',
     },
     detailBox: {
         width: '100%',

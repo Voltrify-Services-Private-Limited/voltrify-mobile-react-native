@@ -231,10 +231,12 @@ const LocationScreen = ({route}) => {
             }}></View>
         </View>
 
+        {/* Manual location entry disabled - enabling location is now mandatory.
         <ModalComponent
           visible={locationModal}
           onClose={() => LocationFrom()}
         />
+        */}
 
         <Text style={styles.text_3}>Enable Location </Text>
         <Text style={styles.text_4}>
@@ -249,12 +251,14 @@ const LocationScreen = ({route}) => {
           onPress={() => LocationLogin()}>
           <Text style={styles.text_5}>Enable Location</Text>
         </TouchableOpacity>
+        {/* Manual location entry disabled - enabling location is now mandatory.
         <TouchableOpacity
           style={[styles.button]}
           onPress={() => setLocationModal(true)}>
           <Text style={styles.text_5}>Enter Location Manually</Text>
         </TouchableOpacity>
-        {/* <Text style={styles.text_4}>No, I’ll do it later</Text> */}
+        <Text style={styles.text_4}>No, I’ll do it later</Text>
+        */}
       </View>
     </View>
   );
